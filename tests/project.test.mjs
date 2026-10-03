@@ -6,12 +6,14 @@ import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { status } from '../scripts/project-status.mjs';
+import { hasFfmpeg } from './helpers.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const run = (script, args) => spawnSync(process.execPath, [join(root, script), ...args], { encoding: 'utf8' });
 const sha = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 function rawVideo(dir) {
   const f = join(dir, 'original.mp4');
+  if (!hasFfmpeg) { writeFileSync(f, Buffer.from('not a real video, but new-project only copies the bytes')); return f; }
   const r = spawnSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc2=s=270x480:r=30:d=2', '-f', 'lavfi', '-i', 'sine=f=220:d=2', '-shortest', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-c:a', 'aac', f], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
   return f;

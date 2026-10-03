@@ -24,6 +24,11 @@ import { dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { argv, exit, pid as selfPid } from "node:process";
 
+if (process.platform === "win32") {
+  // Process discovery here uses ps and lsof (macOS/Linux). On Windows, close preview windows with Ctrl+C or Task Manager.
+  console.log("stop-services: not supported on Windows yet. Stop any `hyperframes preview` / server windows with Ctrl+C, and end leftover chrome-headless-shell, ffmpeg or whisper-cli in Task Manager.");
+  process.exit(0);
+}
 const args = new Set(argv.slice(2));
 const DRY = args.has("--dry-run"), QUIET = args.has("--quiet"), JSON_OUT = args.has("--json");
 // --root <dir> scopes the cleanup to another folder (used by the tests so they never touch the live repo).

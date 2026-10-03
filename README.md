@@ -33,7 +33,9 @@ https://github.com/user-attachments/assets/4ad48761-d14c-407a-9dec-1b76a9afb04a
 
 ## What's included
 
-- **15 skills**, mirrored for both assistants, with their helper scripts and references.
+- **16 skills**, mirrored for both assistants, with their helper scripts and references.
+- **A branded studio workflow** (this fork): one entry skill (`studio-edit`), a reusable builder, audio gates, sound design, and
+  session cleanup. See [Branded studio workflow](#branded-studio-workflow-this-fork).
 - **406 draft motion-graphics cards** across two styles, with manifests, CSS tokens, and editable slots.
 - **Two scene templates:** dark graph paper and a left glass popout.
 - Transcription, silence cutting, mistake detection, reviewed cut rendering,
@@ -67,7 +69,8 @@ npm run setup
 npm test
 ```
 
-Setup checks the tools and creates `.env` only if it is absent. Add only the keys
+Optional free local transcription: `brew install whisper-cpp` and the model in
+[docs/TOOLS-AND-API-KEYS.md](docs/TOOLS-AND-API-KEYS.md). Setup checks the tools and creates `.env` only if it is absent. Add only the keys
 for services you choose. The included transcription helper uses ElevenLabs;
 Whisper and Kie.ai integrations need the setup described in the
 [tools guide](docs/TOOLS-AND-API-KEYS.md). [Setup and troubleshooting](docs/SETUP.md).
@@ -91,6 +94,27 @@ npx hyperframes render --quality draft --output renders/demo.mp4
 The demo uses local GSAP. HyperFrames may download and cache its font substitutions on the first render. It has no voiceover. The separate
 [synthetic transcript](examples/editing/source.json) exercises the cutting tools;
 it is fictional test data, not a transcript of the title animation.
+
+## Branded studio workflow (this fork)
+
+The fastest path from a raw recording to a finished, branded edit. It is stateless: a new session needs only the repo.
+
+> Use studio-edit on [local path to my recording].
+
+Codex: `$studio-edit`. Claude Code: `/studio-edit`. It asks which platform the video is for (LinkedIn 4:5, 9:16, or both), then
+transcribes, trims silences, proposes filler and mistake cuts for your approval, builds a hook-first edit with the monogram bumper,
+captions, lower-third, motion graphics, counter sounds, music and a -16 LUFS voice master, and renders with gates.
+
+```sh
+node scripts/new-project.mjs my-video --raw ~/Movies/recording.mp4   # scaffold; copies, never moves, your original
+node scripts/project-status.mjs video-projects/my-video              # where is it, what is next (reads the files)
+node scripts/build-video.mjs video-projects/my-video --format 4x5 --sfx --music
+npm run stop                                                         # end every session with this
+```
+
+Brand tokens, fonts and decisions live in [brand/BRAND.md](brand/BRAND.md); the builder is documented in
+[docs/BUILDER.md](docs/BUILDER.md). Gates are signal checks: an agent cannot hear audio, so listen to the flagged join clips
+and watch the draft before publishing. `npm run stop` is macOS/Linux only for now.
 
 ## Edit your footage
 
@@ -159,5 +183,5 @@ CDNs; localize these dependencies when assembling a final project.
 The three showcase videos were explicitly supplied for public sharing. No other
 private recordings, transcripts, credentials, or private workspace settings were
 imported. Previously public examples remain in the repository. New folders
-under `video-projects/` and `raw-media/` are ignored automatically; files already
+under `video-projects/`, `raw-media/` and `raw-videos/` (and the generated `sounds/` pack) are ignored automatically; files already
 tracked by Git remain tracked. Create a new project for your own footage.

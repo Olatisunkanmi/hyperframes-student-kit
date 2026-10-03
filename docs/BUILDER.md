@@ -58,3 +58,11 @@ Default export `(ctx) => ({ anchors, html, css, js, counters, cues })`, see the 
 - html: overlay clips, `class="panel clip"`, unique `data-track-index >= 20`.
 - counters: **declare every count-up here**. One object drives the tween and the sound; never hand-write a counting tween.
 - Graphics should show the example, relationship, or consequence the speaker is describing, not restate captions.
+
+## Relationship to the rest of the kit
+The builder is the branded, light-theme path (`brand/`). The style library (`style-library/`, 406 draft cards) and the scene
+templates are dark graph-paper and glass styles; they are NOT used by the builder and do not match the brand. Use them only if the
+user asks, and re-skin to the brand tokens first. The older skills (`edit-video`, `short-form-edit`, `motion-showreel`) remain for their
+own workflows. The builder is inline-composition only, so `validate-beat-sync.mjs` does not apply; beat timing comes from transcript
+anchors and is checked on rendered frames. `short-form-edit`'s planning files (`plan.json`, `OPEN-LOOPS.json`, footage ledger) are not
+produced by `build-video`: create them only when that skill's gates are explicitly required.

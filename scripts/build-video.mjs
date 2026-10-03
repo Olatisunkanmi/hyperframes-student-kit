@@ -54,9 +54,9 @@ const stages = o.stages === "all" ? ["base", "compose", "audio", "compose", "ren
 const outName = o.out ?? `${cfg.slug}-${o.format}-${o.quality === "draft" ? "draft" : "final"}${o.tag ? `-${o.tag}` : ""}.mp4`;
 const outPath = join(dir, "renders", outName);
 // Always use the kit's pinned HyperFrames, never whatever `npx` resolves for a project outside the repo.
-const HF = join(root, "node_modules/.bin/hyperframes");
+const HF = join(root, "node_modules/.bin", process.platform === "win32" ? "hyperframes.cmd" : "hyperframes");
 if (!existsSync(HF)) { console.error("hyperframes not installed: run npm ci in the kit root"); exit(1); }
-const sh = (cmd, a, opts = {}) => spawnSync(cmd, a, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, ...opts });
+const sh = (cmd, a, opts = {}) => spawnSync(cmd, a, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024, shell: process.platform === "win32" && cmd === HF, ...opts }); // Windows needs a shell for .cmd shims
 const clean = (s) => (s ?? "").replace(/\x1b\[[0-9;]*m/g, "");
 let failed = false;
 const say = (s) => console.log(s);

@@ -48,7 +48,7 @@ writeFileSync(join(projectDir, "video.json"), vj);
 copyFileSync(join(root, "templates/brand-video/beats.mjs"), join(projectDir, "beats.mjs"));
 writeFileSync(join(projectDir, "VERIFY.md"), readFileSync(join(root, "templates/brand-video/VERIFY.md"), "utf8").replaceAll("TODO-slug", slug));
 
-const probe = spawnSync("ffprobe", ["-v", "error", "-show_entries", "format=duration,size:stream=codec_type,codec_name,width,height,r_frame_rate", "-of", "default=nw=1", rawPath], { encoding: "utf8" }).stdout.trim().replace(/\n/g, "  ");
+const probe = ((spawnSync("ffprobe", ["-v", "error", "-show_entries", "format=duration,size:stream=codec_type,codec_name,width,height,r_frame_rate", "-of", "default=nw=1", rawPath], { encoding: "utf8" }).stdout) ?? "").trim().replace(/\n/g, "  ") || "(ffprobe not available: install FFmpeg)";
 const rel = (p) => p.replace(root + "/", "");
 console.log(`created ${rel(projectDir)}\n  source copy: assets/raw.mp4 (original untouched at ${rawPath})\n  probe: ${probe}\n`);
 console.log(`Next (see the studio-edit skill):

@@ -6,6 +6,7 @@ import { resolve, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { judge, measureLoudness } from '../scripts/lib/loudness.mjs';
 import { counterTimes } from '../scripts/lib/counter-ticks.mjs';
+import { NEEDS_FFMPEG } from './helpers.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const run = (script, args) => spawnSync(process.execPath, [join(root, script), ...args], { encoding: 'utf8', cwd: root });
@@ -26,7 +27,7 @@ test('judge accepts the delivery window and rejects quiet, loud, and hot-peak au
   assert.match(judge({ lufs: -16, truePeak: 0.2 }).problems[0], /true peak/);
 });
 
-test('audio-master turns a quiet mono file into -16 LUFS stereo that audio-check passes', () => {
+test('audio-master turns a quiet mono file into -16 LUFS stereo that audio-check passes', NEEDS_FFMPEG, () => {
   const dir = scratch(), input = quietMono(dir), out = join(dir, 'master.wav');
   assert.equal(run('scripts/audio-check.mjs', [input]).status, 1, 'quiet input must fail the gate');
   const m = run('scripts/audio-master.mjs', [input, '--out', out]);
@@ -56,7 +57,7 @@ test('preflight allows root data-start with an inline video (the real lint exemp
   assert.doesNotMatch(r.stdout, /root_data_start_conflicts_with_video/);
 });
 
-test('preflight fails a quiet voice file and passes the mastered one', () => {
+test('preflight fails a quiet voice file and passes the mastered one', NEEDS_FFMPEG, () => {
   const dir = scratch(); project(dir, 'assets/voice.wav');
   const quiet = quietMono(dir);
   spawnSync('ffmpeg', ['-v', 'error', '-y', '-i', quiet, join(dir, 'assets/voice.wav')]);
@@ -81,7 +82,7 @@ test('counter ticks land exactly when the rounded number changes (GSAP power2.ou
   assert.throws(() => counterTimes({ start: 0, duration: 1, to: 5, ease: 'bounce' }), /unknown ease/);
 });
 
-test('sound-design expands a counter cue into one tick per displayed change plus a landing', () => {
+test('sound-design expands a counter cue into one tick per displayed change plus a landing', NEEDS_FFMPEG, () => {
   const dir = scratch();
   assert.equal(run('scripts/sound-design.mjs', ['generate', '--dir', join(dir, 'sfx')]).status, 0);
   const cues = join(dir, 'cues.json');
@@ -91,7 +92,7 @@ test('sound-design expands a counter cue into one tick per displayed change plus
   assert.match(r.stdout, /mixed 6 cues/, 'five ticks plus one landing');
 });
 
-test('preflight blocks a mounted SFX stem that has a count-up but no counter cue', () => {
+test('preflight blocks a mounted SFX stem that has a count-up but no counter cue', NEEDS_FFMPEG, () => {
   const dir = scratch(); mkdirSync(join(dir, 'assets'), { recursive: true });
   const quiet = quietMono(dir);
   assert.equal(run('scripts/audio-master.mjs', [quiet, '--out', join(dir, 'assets/voice.master.wav')]).status, 0);

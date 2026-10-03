@@ -30,3 +30,15 @@ brand's own objects, and show me the storyboard and beat sheet before building.
 
 See [the short-form walkthrough](SHORT-FORM.md) for the expected plan files and
 validator commands.
+
+## Studio workflow
+
+**Edit a recording end to end:** Use studio-edit on [path]. Ask me which platform it is for, then show me the proposed
+silence, filler and mistake cuts before applying them. Build a truthful hook, the branded captions and lower-third, motion
+graphics that show what I am saying, and sound design. Give me the draft and the join clips to listen to.
+
+**Resume a project:** Use studio-edit to continue video-projects/[slug]. Run project-status first and pick up from the next stage.
+
+**Change one thing:** Use studio-edit on video-projects/[slug]: [what to change]. Rebuild with build-video and re-run the gates.
+
+**Finish a session:** Run npm run stop and tell me nothing of this repo is left running.

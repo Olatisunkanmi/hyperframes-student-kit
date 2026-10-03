@@ -1,5 +1,26 @@
 # Release verification
 
+## Studio foundation (this fork)
+
+Verified locally on macOS (Darwin 25.5, Apple M2), Node 25.2.1, FFmpeg 9.0.1, HyperFrames 0.7.109.
+
+- 28 tests pass; 21 pass and 7 skip (with reasons, 0 failures) on a simulated bare runner with no ffmpeg, ffprobe or lsof.
+  `npm run check` reports 0 errors. `npm run demo`, preflight, lint, `npm run test:media` (3.673 s clean output) and both
+  short-form validators still pass.
+- One real video went through the builder in 4:5 and 9:16 with sound design: lint 0/0, preflight pass, -16.2 LUFS, true peak -1.1 dBFS.
+  A rebuild through the reusable builder matched the approved draft over 1426 frames (mean SSIM 0.981; 5 isolated frames below 0.965
+  at fade boundaries, from <= 5 ms clip-start rounding).
+- The counting numbers were checked against their tick sounds: displayed values matched the tick math exactly, and every planned
+  tick is audible in the SFX stem.
+- Mono voice renders as dual-mono stereo (+3 LU): the voice master is made stereo before normalizing; a test covers it.
+
+**Not verified:** no human listening pass (counter ticks, effects, the synthetic placeholder music, cut joins were never heard by
+the agent); no run on Windows or Linux and the GitHub CI result was not observed; the `studio-edit` runbook was not exercised by a
+genuinely fresh agent session; the SessionEnd hook was written and validated but not seen firing; the thumbnail and LinkedIn caption
+from the brand guide are specified but not automated; `stop-services` is macOS/Linux only. One leftover process was seen once after a
+test run and could not be reproduced; the cleanup script stopped it.
+
+
 ## Consolidated student kit, version 2
 
 - All 14 canonical skills passed frontmatter validation, and all 94 skill resources

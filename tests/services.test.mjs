@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
+import { NEEDS_PROCESS_TOOLS } from './helpers.mjs';
 import { mkdtempSync, realpathSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 
@@ -15,7 +16,7 @@ const alive = (pid) => { const st = spawnSync('ps', ['-o', 'stat=', '-p', String
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const keepAlive = ['-e', 'setInterval(() => {}, 1e6)'];
 
-test('stop-services stops this repo\'s pipeline processes and leaves everything else alone', async () => {
+test('stop-services stops this repo\'s pipeline processes and leaves everything else alone', NEEDS_PROCESS_TOOLS, async () => {
   const mine = [];
   const decoys = [];
   const start = (list, cmd, args, cwd) => { const p = spawn(cmd, args, { cwd, stdio: 'ignore' }); list.push(p); return p; };
@@ -49,7 +50,7 @@ test('stop-services stops this repo\'s pipeline processes and leaves everything 
   }
 });
 
-test('stop-services is a no-op (exit 0) when nothing is running', () => {
+test('stop-services is a no-op (exit 0) when nothing is running', NEEDS_PROCESS_TOOLS, () => {
   const r = spawnSync(process.execPath, [script, '--root', root, '--quiet'], { encoding: 'utf8' });
   assert.equal(r.status, 0, r.stdout + r.stderr);
 });

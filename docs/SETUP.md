@@ -31,3 +31,16 @@ missing speech_to_text access. Check the key's permissions without printing it.
 No key is required for `npm test`, starter preview, or starter rendering.
 For speech-free sources, supply a separate audio track before using the cutting
 renderers: they expect one video stream and one audio stream.
+
+## Studio workflow additions
+
+- **Local transcription (optional, free):** `brew install whisper-cpp`, download `ggml-small.en.bin` to `~/.cache/whisper-cpp/`
+  (commands in TOOLS-AND-API-KEYS.md), then `node scripts/transcribe-local.mjs <video>`. It cleans up stutters, so keep ElevenLabs
+  Scribe for mistake detection.
+- **Stop local services:** `npm run stop` stops the preview servers, headless Chrome, ffmpeg and whisper this repo started, and
+  nothing else. Claude Code runs it from the SessionEnd hook in `.claude/settings.json` (open `/hooks` once or restart if the
+  settings file is new). Codex has no such hook: run it before finishing a session.
+- **Generated, not committed:** `sounds/sfx/` (rebuild with `node scripts/sound-design.mjs generate`) and `luts/*.cube`
+  (rebuild with `python3 luts/make-soft-pastel-lut.py`).
+- **Platform notes:** `npm test` skips tests that need ffmpeg, ps or lsof when they are missing. `stop-services` supports
+  macOS/Linux only; on Windows it prints how to stop things by hand. The studio scripts were developed and verified on macOS.

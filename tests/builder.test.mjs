@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { layoutFor, LAYOUTS } from '../scripts/lib/builder/layout.mjs';
 import { captionGroups, locateHook, makeFind, finalWords, normWord } from '../scripts/lib/builder/timeline.mjs';
+import { NEEDS_FFMPEG } from './helpers.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const run = (args) => spawnSync(process.execPath, [join(root, 'scripts/build-video.mjs'), ...args], { encoding: 'utf8', cwd: root });
@@ -55,7 +56,7 @@ test('makeFind is punctuation-insensitive and honours from/part; captions group 
   assert.ok(groups.every((g) => new Set(g.words.map((w) => w.part)).size === 1), 'a group never straddles hook and body');
 });
 
-test('end to end on a synthetic project: base + compose + audio produce a lint-clean, preflight-passing page', () => {
+test('end to end on a synthetic project: base + compose + audio produce a lint-clean, preflight-passing page', NEEDS_FFMPEG, () => {
   const dir = mkdtempSync(join(tmpdir(), 'hyperframes-kit-test-'));
   mkdirSync(join(dir, 'assets'), { recursive: true });
   mkdirSync(join(dir, 'compositions'), { recursive: true }); // new-video creates this
