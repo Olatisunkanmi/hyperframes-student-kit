@@ -28,3 +28,9 @@ placeholders. Replace them with your own verified copy before publishing a video
 The three videos in examples/showcase were also explicitly supplied by Nate for
 public inclusion as finished-output references. They retain their existing asset
 rights; inclusion does not grant rights to third-party brands or embedded media.
+
+## Brand fonts (brand/fonts)
+
+Space Grotesk (Bold 700) and Inter (400, 600), latin subsets, obtained from the Fontsource npm packages
+(@fontsource/space-grotesk, @fontsource/inter). Both are licensed under the SIL Open Font License 1.1
+(https://openfontlicense.org). They may be bundled and used freely, but not sold on their own.

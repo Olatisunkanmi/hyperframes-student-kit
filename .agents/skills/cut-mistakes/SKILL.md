@@ -30,6 +30,17 @@ Input is normally Agent 1's `<stem>.silence-transcript.json`, so cuts land on th
 
 Candidate types: `stutter` (immediate word repeat), `retake` (duplicate/near-duplicate segment via Jaccard similarity), `false_start` (short abandoned phrase that restarts).
 
+### 1b. Find filler words
+
+```bash
+node .agents/skills/cut-mistakes/scripts/find-fillers.mjs \
+  <silence-transcript.json> --out-dir video-projects/<slug>/assets
+```
+
+Writes `<stem>.filler-candidates.{json,md}` and `<stem>.filler-cuts-draft.json`. `certain` fillers (um, uh, er, hmm) are proposed for cutting and appear in the draft cuts file. `contextual` fillers (you know, I mean, basically, like) are flagged for review only and are never in the draft; approve them one by one after reading context. Merge approved filler cuts and approved mistake cuts into one `approved-cuts.json` before step 3 (overlapping ranges are fine; widen rather than duplicate).
+
+Transcript caveat: Whisper-family models often drop "um/uh" from the text, and ElevenLabs Scribe may too unless verbatim output is on. If the finder reports zero certain fillers on a clearly hesitant recording, re-transcribe verbatim or listen to the audio before trusting that result.
+
 ### 2. Review (the gate — REQUIRED)
 
 Read each candidate **in context** and decide keep-or-cut. The mechanical detector cannot tell intentional emphasis/rhetoric from a real flub, so do not trust `recommend` blindly — read `removes` + `context`. Common false positives: emphatic repetition ("it's never, never hands-off"), copula-then-question ("the piece is, is this…"), listing.

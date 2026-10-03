@@ -34,6 +34,21 @@ instead of paying to transcribe the same take again. See the official
 [Scribe API documentation](https://elevenlabs.io/docs/api-reference/speech-to-text/convert)
 for current model options and usage details.
 
+## Free offline transcription (whisper.cpp)
+
+`brew install whisper-cpp`, download a model once, then:
+
+```sh
+mkdir -p ~/.cache/whisper-cpp && curl -L -o ~/.cache/whisper-cpp/ggml-small.en.bin \
+  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin
+node scripts/transcribe-local.mjs video-projects/my-video/assets/raw.mp4
+```
+
+Nothing is uploaded and there is no per-minute cost. Caveats from a real test: it silently cleans up
+stutters and false starts that ElevenLabs Scribe keeps, and it mishears names and some terms. Use Scribe
+for mistake detection and local Whisper as the free fallback or a cross-check
+(`scripts/audio-joins.mjs --asr` uses it to re-hear the finished audio).
+
 ## Whisper and other transcription alternatives
 
 You can prompt the assistant to use another provider. The bundled
@@ -119,7 +134,7 @@ These are workflow options, not a claim that every example used them:
 - **Older integration examples:** ClickUp or OpenAI access is needed only when
   your selected project actually calls those services.
 - **Sound effects:** `motion-showreel` can generate an SFX kit with ElevenLabs
-  sound generation (`scripts/sfx.mjs`). It uses `ELEVENLABS_API_KEY`; the key needs
+  sound generation (`scripts/sound-design.mjs`). It uses `ELEVENLABS_API_KEY`; the key needs
   sound-effects access as well as `speech_to_text`. Your own SFX library works too.
 - **Helper runtimes:** some optional scripts require Python. Playwright is
   included for relevant browser workflows; browser binaries may need installation.

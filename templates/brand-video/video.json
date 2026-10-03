@@ -1,0 +1,14 @@
+{
+  "_help": "Fill every TODO. Words are matched against the cleaned transcript, lower-case, punctuation ignored. See docs/BUILDER.md.",
+  "slug": "TODO-slug",
+  "brand": "brand/brand.json",
+  "source": { "clean": "assets/clean.mp4", "transcript": "assets/raw.mistakes-transcript.json" },
+  "hook": { "after": "TODO-word-before-the-hook", "from": "TODO-first-hook-word", "to": "TODO-last-hook-word", "pre": 0.1, "post": 0.16 },
+  "bodyStart": 0.12,
+  "bumper": 2,
+  "outro": { "seconds": 2.5, "text": "Follow for the build" },
+  "lowerThird": { "startWord": "TODO-word-where-the-name-card-enters", "nameWord": "TODO-first-word-of-the-name", "endWord": "TODO-word-where-it-leaves" },
+  "nameFixes": {},
+  "emphasis": [],
+  "music": { "synth": true }
+}

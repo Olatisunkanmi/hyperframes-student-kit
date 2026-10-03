@@ -189,15 +189,11 @@ if (!rootStart) {
     warns++;
   }
 } else {
-  if (videoWithDataStart) {
-    fail(
-      "root_data_start_conflicts_with_video",
-      `root has data-start="${rootStart}" AND an inline <video ${readAttr(videoWithDataStart.raw, "id") ? `id="${readAttr(videoWithDataStart.raw, "id")}"` : ""} data-start=...>. This triggers video_nested_in_timed_element at render time. Either remove data-start from root, or remove data-start from the <video>.`
-    );
-    hardFail++;
-  } else {
-    ok("root_data_start", `"${rootStart}"`);
-  }
+  // HyperFrames' own video_nested_in_timed_element rule exempts the root composition
+  // (any element carrying data-composition-id), so root data-start="0" plus an inline
+  // <video data-start=...> is valid and required by the root_composition_missing_data_start
+  // lint. A video nested inside a NON-root timed wrapper is still caught by `hyperframes lint`.
+  ok("root_data_start", `"${rootStart}"${videoWithDataStart ? " (inline video allowed: lint exempts the root)" : ""}`);
 }
 
 // 2) Inline-script timeline registration + duration
@@ -258,6 +254,54 @@ if (shaderCount > 3) {
   const subs = listSubCompIds(html);
   for (const { id } of subs.slice(0, 12)) {
     console.log(`    ${ansi.dim("→")} http://localhost:3002/?comp=${encodeURIComponent(id)}`);
+  }
+}
+
+// 4b) Delivery loudness: the mastered voice must be -18..-14 LUFS (see scripts/audio-master.mjs).
+// Checks the only <audio>, or every <audio> whose file name contains "master". Opt out per element
+// with data-loudness-exempt (e.g. a separate music bed or SFX stem).
+{
+  const audios = scanAllTags(html, "audio")
+    .map((t) => ({ src: readAttr(t.raw, "src"), exempt: /data-loudness-exempt/i.test(t.raw) }))
+    .filter((a) => a.src && !/^https?:/i.test(a.src) && !a.exempt);
+  const targets = audios.length === 1 ? audios : audios.filter((a) => /master/i.test(a.src));
+  for (const a of targets) {
+    const abs = join(projectDir, a.src.replace(/^\.\//, ""));
+    if (!existsSync(abs)) { warn("audio_missing", `${a.src} not found`); warns++; continue; }
+    try {
+      const { measureLoudness, judge } = await import("./lib/loudness.mjs");
+      const m = measureLoudness(abs);
+      const v = judge(m);
+      if (v.ok) ok("audio_loudness", `${a.src}: ${m.lufs} LUFS, true peak ${m.truePeak} dBFS`);
+      else {
+        fail("audio_loudness", `${a.src}: ${v.problems.join("; ")}. Run: node scripts/audio-master.mjs <voice> --out <master.wav> and point <audio> at it.`);
+        hardFail++;
+      }
+    } catch (e) {
+      warn("audio_loudness_unchecked", `could not measure ${a.src}: ${e.message}`);
+      warns++;
+    }
+  }
+  if (!targets.length && audios.length > 1) { warn("audio_loudness_unchecked", "several <audio> elements and none is named *master*; name the voice master file or run audio-check.mjs on the render."); warns++; }
+}
+
+// 4c) Count-up numbers need sound. A tween that rewrites an element's text every frame (onUpdate + textContent)
+// is a counter. With sound design in use, assets/sfx-cues.json must contain a {"type":"counter"} cue for it
+// (scripts/sound-design.mjs expands it into rising ticks + a landing sound, timed from the same tween).
+{
+  const hasCounter = /onUpdate[\s\S]{0,300}textContent/.test(scriptBody);
+  if (hasCounter) {
+    const hasSfxAudio = scanAllTags(html, "audio").some((t) => /sfx/i.test(readAttr(t.raw, "src") || ""));
+    const cuesPath = join(projectDir, "assets/sfx-cues.json");
+    let counterCues = 0;
+    try { counterCues = JSON.parse(readFileSync(cuesPath, "utf8")).filter((c) => c.type === "counter").length; } catch {}
+    if (hasSfxAudio && counterCues === 0) {
+      fail("counter_without_sound", `a count-up animation exists but assets/sfx-cues.json has no {"type":"counter"} cue. Add one per counter (see scripts/sound-design.mjs).`);
+      hardFail++;
+    } else if (!hasSfxAudio) {
+      warn("counter_without_sound_design", `a count-up animation exists and no sfx stem is mounted. Counters should have tick sound: build counter cues, mix with scripts/sound-design.mjs, add the stem.`);
+      warns++;
+    } else ok("counter_sound", `${counterCues} counter cue(s)`);
   }
 }
 

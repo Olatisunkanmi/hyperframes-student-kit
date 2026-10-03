@@ -1,0 +1,13 @@
+{
+  "slug": "img-8410",
+  "brand": "brand/brand.json",
+  "source": { "clean": "assets/clean.mp4", "transcript": "assets/raw.mistakes-transcript.json" },
+  "hook": { "after": "other", "from": "thirty-seven", "to": "mistranslated", "pre": 0.1, "post": 0.16 },
+  "bodyStart": 0.12,
+  "bumper": 2,
+  "outro": { "seconds": 2.5, "text": "Follow for the build" },
+  "lowerThird": { "startWord": "hi", "nameWord": "olasunkanmi", "endWord": "i've" },
+  "nameFixes": { "Olusokunmi": "Olasunkanmi", "Igbason.": "Igbasan." },
+  "emphasis": ["thirty-seven", "percent", "five", "years"],
+  "music": { "synth": true }
+}

@@ -17,3 +17,13 @@ A number on its own floats in empty space. Pair every metric with a visual eleme
 - **No 6-panel dashboards** — 2-3 related metrics side-by-side is fine, 6+ is a web pattern
 - **No gridlines, tick marks, or legends** — visual noise that adds nothing in motion
 - **No chart library output** — build with GSAP + SVG/CSS, not D3 or Chart.js
+
+
+## Counting numbers need sound
+
+When a stat counts up (0 -> 37%, 0 -> 5 years), plan its sound at the same time as its tween. Declare the
+counter once (start, duration, ease, from, to), generate the GSAP tween from it, and generate a
+`{ "type": "counter", ... }` cue from the same object. `scripts/lib/counter-ticks.mjs` computes when each whole
+number first appears (the tween rounds, so number k appears when the eased value reaches k - 0.5), and
+`scripts/sound-design.mjs mix` turns it into rising-pitch ticks plus a landing sound. Fast rolls are thinned to
+at most one tick per 30 ms so they sound like a rolling counter. Never ship a count-up with silence or a single tick.

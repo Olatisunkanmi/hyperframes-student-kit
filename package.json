@@ -6,6 +6,7 @@
   "description": "HyperFrames student kit for Codex and Claude Code: long-form edits, reels, storytelling, and motion graphics.",
   "scripts": {
     "transcribe": "node scripts/transcribe-elevenlabs.mjs",
+    "transcribe:openai": "node scripts/transcribe-openai.mjs",
     "validate-beats": "node scripts/validate-beat-sync.mjs",
     "preflight": "node scripts/preflight.mjs",
     "sync:skills": "node scripts/sync-codex-skills.mjs",
@@ -19,7 +20,16 @@
     "test:media": "node scripts/smoke-media.mjs",
     "validate:short-form": "node .claude/skills/short-form-edit/scripts/validate-plan.mjs",
     "validate:footage": "node .claude/skills/short-form-edit/scripts/validate-footage.mjs",
-    "preflight:all": "node scripts/preflight-all.mjs"
+    "preflight:all": "node scripts/preflight-all.mjs",
+    "transcribe:local": "node scripts/transcribe-local.mjs",
+    "audio:master": "node scripts/audio-master.mjs",
+    "audio:check": "node scripts/audio-check.mjs",
+    "audio:joins": "node scripts/audio-joins.mjs",
+    "sound": "node scripts/sound-design.mjs",
+    "build-video": "node scripts/build-video.mjs",
+    "new-project": "node scripts/new-project.mjs",
+    "status": "node scripts/project-status.mjs",
+    "stop": "node scripts/stop-services.mjs"
   },
   "engines": {
     "node": ">=22"

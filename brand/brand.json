@@ -1,0 +1,40 @@
+{
+  "name": "Olasunkanmi Igbasan",
+  "title": "Software Engineer",
+  "monogram": "OI",
+  "colors": {
+    "navy": "#0A1628",
+    "paper": "#FFFFFF",
+    "teal": "#0E7C7B",
+    "amber": "#F5A623",
+    "ink": "#1A1A1A",
+    "slate": "#5B6B7A"
+  },
+  "fonts": {
+    "display": {
+      "family": "Space Grotesk",
+      "weight": 700,
+      "file": "fonts/space-grotesk-700.woff2"
+    },
+    "body": {
+      "family": "Inter",
+      "weight": 400,
+      "file": "fonts/inter-400.woff2"
+    },
+    "caption": {
+      "family": "Inter",
+      "weight": 600,
+      "file": "fonts/inter-600.woff2"
+    }
+  },
+  "formats": {
+    "linkedin": {
+      "w": 1080,
+      "h": 1350
+    },
+    "vertical": {
+      "w": 1080,
+      "h": 1920
+    }
+  }
+}

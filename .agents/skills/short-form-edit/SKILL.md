@@ -5,6 +5,9 @@ description: Turn talking-head footage into a finished reel, YouTube Short, or s
 
 # Short form edit
 
+Default entry for any raw video is the `studio-edit` skill; this skill is the short-form craft detail it builds on.
+End every session with `npm run stop` (stops local preview servers, headless Chrome, ffmpeg, whisper).
+
 Input: a source-video path and an optional reference-reel path.
 
 Deliver the requested formats and the editable project. Default to 1080x1920;
@@ -21,6 +24,32 @@ payoff inside the video. Effects, asset volume, and production polish come after
 this test. Treat the answer as editorial judgment until audience data exists.
 
 ## Establish the edit
+
+**Before building any new video, ask which platform/format it is for (never assume).** Call the
+`AskUserQuestion` tool with exactly this prompt, even when a brand default exists:
+
+```yaml
+AskUserQuestion:
+  questions:
+    - question: "Which platform and format is this video for?"
+      header: "Format"
+      multiSelect: false
+      options:
+        - label: "LinkedIn feed 4:5 (Recommended)"
+          description: "1080x1350. The brand default (brand/BRAND.md). Cropped from vertical footage when needed."
+        - label: "TikTok / Reels / Shorts 9:16"
+          description: "1080x1920. Full vertical frame, phone-safe text zones."
+        - label: "Both 4:5 and 9:16"
+          description: "Two separately checked renders from the same edit."
+        - label: "YouTube 16:9"
+          description: "1920x1080. Needs its own layout, so confirm scope before building."
+```
+
+Build with `node scripts/build-video.mjs <project> --format 4x5|9x16 [--sfx] [--music]` (see docs/BUILDER.md).
+Per-video graphics go in `<project>/beats.mjs`; counters declared there get tick sound automatically. A format with no layout entry yet needs one added
+and verified on rendered frames, not a silent crop.
+
+The skill's default of 1080x1920 applies only when the user picks 9:16.
 
 1. Read the scoped workspace guide, `MOTION_PHILOSOPHY.md`, and the HyperFrames
    and video-storytelling skills before composition work. Use the user's brief
@@ -266,6 +295,12 @@ human reactions where they support the story.
    swipes support movement; restrained success tones support checks. Align the
    audible onset or impact peak, not just the beginning of an audio file with
    leading silence. Vary effect density and levels. Voice remains dominant.
+   **Every count-up number gets a counter sound (never a single tick, never silent).** When a
+   graphic counts a value (0 -> 37%, 0 -> 5 years), emit one rising-pitch tick per displayed number
+   change plus a landing sound, with times derived from the same tween (start, duration, ease,
+   from, to) via `scripts/lib/counter-ticks.mjs`. Declare each counter once in a config that
+   drives both the GSAP tween and a `{"type":"counter"}` cue; `scripts/sound-design.mjs mix`
+   expands it. Preflight fails a mounted SFX stem that has a count-up but no counter cue.
    Score anticipation, contact, and release separately. A brief bed dip can make
    the next contact more distinct without raising its volume. Let some cuts pass
    without a whoosh. Record cue purpose and audition transitions when supported.
@@ -298,6 +333,11 @@ It reads `assets/plan.json`, `assets/transcript.json`, and
 `assets/edit-decisions.json`. See [plan-schema.md](references/plan-schema.md).
 For another implementation, export that schema or adapt the validator explicitly;
 never silently skip checks because the schema differs.
+
+Audio gates are scripted, not optional: master the voice with `node scripts/audio-master.mjs`
+(preflight fails outside -18..-14 LUFS), then run `node scripts/audio-check.mjs <render>` on every
+render and `node scripts/audio-joins.mjs` for the join review and audition clips. Mono voice
+renders as dual-mono stereo (+3 LU), so always judge the encoded render.
 
 Inspect encoded hero frames for every shot at full size and phone scale. Inspect
 contiguous strips across every cut and transition, plus the complete motion where

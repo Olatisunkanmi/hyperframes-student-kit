@@ -20,6 +20,7 @@ For one stage, load the matching local skill:
 
 | Need | Skill |
 | --- | --- |
+| A raw video to edit end to end, or resume a project (DEFAULT entry) | `studio-edit` |
 | Reels, Shorts, and short advertisements | `short-form-edit` |
 | Motion-design showreels and brand reels cut to music | `motion-showreel` |
 | Existing May Shorts example maintenance | `short-form-video` |
@@ -40,6 +41,38 @@ Before a creative session read `MOTION_PHILOSOPHY.md` and the project's DESIGN.m
 The philosophy's fast sizzle pacing is a style reference. Give educational speech
 room to breathe. The project brief controls pacing, palette, and typography.
 Framework skill contracts override historical code recipes in the style guide.
+
+## Studio mode: how a new raw video is handled
+
+When the user hands over a raw video path, run `edit-video` end to end without
+re-asking settled questions. Default pipeline: ffprobe the source, transcribe,
+`cut-silences`, then `cut-mistakes` including `find-fillers.mjs` (um/uh and other
+filler words), then plan and build motion graphics only where they clarify or
+reinforce a spoken point (`video-storytelling`, `hyperframes-video-beats`),
+then verify and render a draft. Show the filler and mistake cut list and the
+beat sheet for approval before rendering. The user owns publishing.
+Build with `node scripts/build-video.mjs <project> --format ...` (docs/BUILDER.md); per-video graphics live in
+`<project>/beats.mjs`. Before building any NEW video, ask the platform/format with AskUserQuestion (LinkedIn 4:5 recommended, 9:16,
+both, 16:9); never assume. Brand order: hook, 2 s monogram bumper, body, outro card (brand/BRAND.md).
+Transcription: ElevenLabs Scribe (`scripts/transcribe-elevenlabs.mjs`) is the default and the
+best for mistake detection. Free offline fallback: `scripts/transcribe-local.mjs` (whisper.cpp,
+model in ~/.cache/whisper-cpp). OpenAI Whisper helper exists but needs account credit.
+Confirm before uploading each new recording. Check the transcript contains um/uh before
+trusting a zero filler count. Tools: `luts/` (grade), `scripts/sound-design.mjs` (opt-in sound design).
+Brand: if `brand/BRAND.md` exists, read it before choosing colours, fonts, captions, or lower-thirds
+(tokens in `brand/brand.json`, fonts in `brand/fonts`; Space Grotesk is NOT in the renderer's auto font list, so
+embed with @font-face). Every count-up number needs counter sound (`scripts/lib/counter-ticks.mjs`).
+
+## Stateless work and session end
+
+Treat every request as a cold start: never rely on earlier conversation. State lives in files: this guide, `brand/BRAND.md`,
+`docs/BUILDER.md`, the `studio-edit` skill, and each project's `video.json`, `assets/approved-cuts.json` and `VERIFY.md`.
+`node scripts/project-status.mjs [project]` shows where any project stands and what comes next; record every user decision in the
+project's `VERIFY.md`. Start a project with `node scripts/new-project.mjs <slug> --raw <video>`.
+
+Before ending ANY session run `npm run stop` (`scripts/stop-services.mjs`): it stops every local process this repo started
+(HyperFrames preview/render, headless Chrome, preview servers, ffmpeg, whisper) and touches nothing else. Claude Code also runs
+it from a SessionEnd hook in `.claude/settings.json`; Codex has no such hook, so run it yourself. Never leave a preview server running.
 
 ## Workspace
 
@@ -98,6 +131,11 @@ concrete preview or cut proposal first. Never claim a lint result proves visual
 quality. Only publish or upload a finished video when the user authorizes it.
 Automated browser checks must be headless, with Pointer Lock and cursor capture
 disabled; synthetic input must remain inside the virtual browser.
+
+Audio is gated by scripts: `scripts/audio-master.mjs` (stereo, -16 LUFS) before the
+composition, `preflight` fails a voice master outside -18..-14 LUFS, and
+`scripts/audio-check.mjs` plus `scripts/audio-joins.mjs` run on every render. The agent
+cannot hear: give the user the flagged join clips to audition and say what remains unheard.
 
 For short-form edits, read `docs/SHORT-FORM.md` and use the plan and footage
 validators. Structural checks supplement rendered video and audio review.

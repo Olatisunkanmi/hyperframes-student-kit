@@ -7,6 +7,8 @@
 *.key
 node_modules/
 raw-media/
+raw-videos/
+sounds/
 video-projects/
 renders/
 **/renders/
@@ -42,3 +44,4 @@ Thumbs.db
 !examples/showcase/curiosity-reel-2.mp4
 !examples/showcase/curiosity-reel-1.mp4
 !examples/showcase/ais-live-ad.mp4
+luts/*.cube
