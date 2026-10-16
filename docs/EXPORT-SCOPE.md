@@ -18,7 +18,10 @@ it is not a media-free export. New student media and projects are gitignored.
 ## Approved finished-video showcase
 
 Three additional finished exports were explicitly supplied for public sharing:
-`examples/showcase/curiosity-reel-2.mp4`, `curiosity-reel-1.mp4`, and
-`ais-live-ad.mp4`. They are unchanged copies of those exports. Preview JPGs were
+`examples/showcase/ai-edits-everything-reveal.mp4`,
+`ai-edits-everything-raw-vs-edited.mp4`, and `ais-live-ad.mp4`. On 2026-10-14 the
+two "AI edits everything" reels replaced the two curiosity reels at Nate's request;
+they are re-encoded from the 60fps finals for size, and the AIS Live ad is an
+unchanged copy of its export. Preview JPGs were
 extracted from them. No source projects, private transcripts, or other recordings
 were added with this showcase update. The old README starter image was removed.

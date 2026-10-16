@@ -1,6 +1,7 @@
-# HyperFrames Student Kit
+# Herk Edit Kit
 
-Nate Herk's reusable video-editing kit for **Codex and Claude Code**.
+Nate Herk's video-editing kit for **Codex and Claude Code**, built on HyperFrames.
+Formerly the HyperFrames Student Kit.
 Bring your own footage. Cut dead air, review mistakes, plan the story, and build
 motion graphics with HyperFrames and GSAP.
 
@@ -16,16 +17,22 @@ lands as the play button in the logo.
 
 https://github.com/user-attachments/assets/056b46e9-7379-4e71-b825-20fb9f8e9555
 
-The three short-form videos below were created by Nate. Press Play on any video
-to watch it here in the README.
+The three short-form videos below were recorded by Nate. The first two were
+edited end to end by an AI agent running the editing skills in this kit, from his
+raw recording: cuts, captions, B-roll, motion graphics, music, and sound effects.
+Press Play on any video to watch it here in the README.
 
-### Curiosity reel: unlock your project
+### AI edits everything: the reveal
 
-https://github.com/user-attachments/assets/920cc3b7-6ef0-4324-aa98-870c1c2a07c5
+One take of Nate talking, edited by the agent into a 51-second reel about how it was edited.
 
-### Curiosity reel: build a better AI system
+https://github.com/user-attachments/assets/6fe4fc3b-c381-45f6-8305-efae2a0b0132
 
-https://github.com/user-attachments/assets/ba468302-fe07-4e4c-949b-68951dd84625
+### AI edits everything: raw vs edited
+
+Opens on the untouched raw recording, then hard-cuts to the finished edit and walks through what the agent did.
+
+https://github.com/user-attachments/assets/733bc3f0-432f-41a0-b52d-107cd7f0c806
 
 ### AIS Live ad
 
@@ -33,6 +40,7 @@ https://github.com/user-attachments/assets/4ad48761-d14c-407a-9dec-1b76a9afb04a
 
 ## What's included
 
+- **[Editing playbook](docs/EDITING-PLAYBOOK.md):** how Nate's videos get edited with AI, the measured house reel style, the B-roll, caption, and sound rules, and how every note becomes a rule in a skill.
 - **16 skills**, mirrored for both assistants, with their helper scripts and references.
 - **A branded studio workflow** (this fork): one entry skill (`studio-edit`), a reusable builder, audio gates, sound design, and
   session cleanup. See [Branded studio workflow](#branded-studio-workflow-this-fork).
@@ -41,7 +49,7 @@ https://github.com/user-attachments/assets/4ad48761-d14c-407a-9dec-1b76a9afb04a
 - Transcription, silence cutting, mistake detection, reviewed cut rendering,
   transcript retiming, EDL review, beat-sync validation, and preflight tools.
 - **Short-form editing:** reels, YouTube Shorts, hook and payoff planning, precise captions, moving B-roll, and audio review.
-- **12 existing teaching projects** preserved from the original student kit.
+- **12 existing teaching projects** preserved from the original kit.
 - A synthetic starter composition and editing fixture that need no footage or API key.
 
 ## Tools and optional services
@@ -62,8 +70,8 @@ Chromium. Make `node`, `ffmpeg`, and `ffprobe` available in your terminal.
 Then run these commands in PowerShell, macOS Terminal, or a Linux shell:
 
 ```sh
-git clone https://github.com/nateherkai/hyperframes-student-kit.git
-cd hyperframes-student-kit
+git clone https://github.com/nateherkai/herk-edit-kit.git
+cd herk-edit-kit
 npm ci
 npm run setup
 npm test
@@ -156,7 +164,7 @@ measure a music take's beat grid, splice it onto the cut grid, and premix sound 
 
 ## Existing examples and migration
 
-This is the main student-kit repository. The newer video-pipeline kit has been
+This is the main Herk Edit Kit repository. The newer video-pipeline kit has been
 merged here with both Git histories preserved. The original 12 projects remain
 in `video-projects/`, alongside the original shared brand examples and the
 `make-a-video`, `short-form-video`, and `website-to-hyperframes` skills.
@@ -167,6 +175,7 @@ Shorts compositions. [Migration and compatibility notes](docs/MIGRATION.md).
 
 | Resource | Start here |
 | --- | --- |
+| How Nate edits (style, rules, lessons) | [Editing playbook](docs/EDITING-PLAYBOOK.md) |
 | Shared agent instructions | [AGENTS.md](AGENTS.md) |
 | Motion and transition vocabulary | [MOTION_PHILOSOPHY.md](MOTION_PHILOSOPHY.md) |
 | Card library and design tokens | [Library guide](style-library/GUIDE.md) |

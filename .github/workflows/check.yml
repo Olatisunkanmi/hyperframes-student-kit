@@ -1,4 +1,4 @@
-name: Check student kit
+name: Check Herk Edit Kit
 on: [push, pull_request]
 permissions:
   contents: read

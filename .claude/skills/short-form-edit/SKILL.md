@@ -23,6 +23,17 @@ need to watch until the end?"** Establish a specific reason to stay and earn its
 payoff inside the video. Effects, asset volume, and production polish come after
 this test. Treat the answer as editorial judgment until audience data exists.
 
+## House style and notes
+
+Read `docs/EDITING-PLAYBOOK.md` before planning. It holds Nate's measured reel
+style (pacing, layouts, captions, B-roll order, sound palette), the raw-reel,
+long-to-Short, and narrated-explainer variants, and the lessons that cost time.
+Use it as the default when the user gives no style; the user's brief wins.
+
+When the user gives a note on a draft, fix the edit, then offer to write the
+note into the relevant skill or reference as a rule, check, or script change, so
+the next edit starts from it. Record the note and the resulting rule together.
+
 ## Establish the edit
 
 **Before building any new video, ask which platform/format it is for (never assume).** Call the

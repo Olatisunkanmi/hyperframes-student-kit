@@ -1,6 +1,6 @@
-# Consolidated student kit
+# Consolidated Herk Edit Kit
 
-The existing `nateherkai/hyperframes-student-kit` is the canonical repository.
+`nateherkai/herk-edit-kit` (formerly `nateherkai/hyperframes-student-kit`) is the canonical repository.
 The reusable kit from `nateherkai/hyperframes-video-pipeline` was merged into it,
 preserving both published histories and the original repository's stars and URL.
 

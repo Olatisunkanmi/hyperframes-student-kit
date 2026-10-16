@@ -21,7 +21,7 @@ from the brand guide are specified but not automated; `stop-services` is macOS/L
 test run and could not be reproduced; the cleanup script stopped it.
 
 
-## Consolidated student kit, version 2
+## Consolidated Herk Edit Kit, version 2
 
 - All 14 canonical skills passed frontmatter validation, and all 94 skill resources
   match the Codex mirrors. The distribution check reports zero errors across

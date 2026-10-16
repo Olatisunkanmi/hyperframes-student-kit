@@ -1,4 +1,4 @@
-# HyperFrames Student Kit: workspace guide
+# Herk Edit Kit: workspace guide
 
 Turn a talking-head recording into an intentional edit using local HyperFrames
 rendering, transcript-driven cuts, and reusable motion graphics.
@@ -137,5 +137,6 @@ composition, `preflight` fails a voice master outside -18..-14 LUFS, and
 `scripts/audio-check.mjs` plus `scripts/audio-joins.mjs` run on every render. The agent
 cannot hear: give the user the flagged join clips to audition and say what remains unheard.
 
-For short-form edits, read `docs/SHORT-FORM.md` and use the plan and footage
+For short-form edits, read `docs/SHORT-FORM.md` and `docs/EDITING-PLAYBOOK.md`
+(Nate's measured house style and lessons), and use the plan and footage
 validators. Structural checks supplement rendered video and audio review.
