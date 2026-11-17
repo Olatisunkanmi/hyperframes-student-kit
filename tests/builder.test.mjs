@@ -77,6 +77,7 @@ test('end to end on a synthetic project: base + compose + audio produce a lint-c
   const html = readFileSync(join(dir, 'index.html'), 'utf8');
   assert.match(html, /data-width="1080" data-height="1350"/);
   assert.match(html, /sfx\.stem\.wav/, 'sfx stem is mounted when requested and built');
+  assert.match(readFileSync(join(dir, 'review/motion-review.md'), 'utf8'), /No findings/, 'a beats module with no self-review still writes the motion review');
   const cues = JSON.parse(readFileSync(join(dir, 'assets/sfx-cues.json'), 'utf8'));
   assert.ok(cues.some((c) => c.type === 'counter' && c.to === 37), 'the declared counter produced a counter cue');
   const meta = JSON.parse(readFileSync(join(dir, 'assets/base.meta.json'), 'utf8'));

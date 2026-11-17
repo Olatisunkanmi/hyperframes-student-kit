@@ -5,6 +5,7 @@ import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { freeform, validateSpec } from "../scripts/lib/freeform/freeform.mjs";
+import { fitScale } from "../scripts/lib/freeform/data-scenes.mjs";
 
 const TEXT = "that is only half of the job. What is an EMR? An EMR means electronic medical record. In hospital A take vitals then doctor. In hospital B vitals in the office. This is very crucial because it works.";
 function makeCtx() {
@@ -127,7 +128,74 @@ test("expand escapes its initial and rejects a part with nothing to show", () =>
   } finally { rmSync(ctx.dir, { recursive: true, force: true }); }
 });
 
+function dataSpec({ find }) {
+  const half = find("half"), what = find("what"), emr = find("emr", what.start);
+  const an = find("an", emr.start), electronic = find("electronic"), medical = find("medical"), record = find("record");
+  const inA = find("in", record.start), vitals = find("vitals", inA.start), doctor = find("doctor"), office = find("office");
+  return { scenes: [
+    { type: "counter", from: find("that"), to: find("job"), value: { at: half, to: 50, suffix: "%" }, label: "of the job" },
+    { type: "timeline", from: an, to: record, title: "The steps", steps: [{ at: electronic, label: "Electronic" }, { at: medical, label: "Medical", caption: "the clinical part" }, { at: record, label: "Record" }] },
+    { type: "chart", from: inA, to: office, bars: [{ at: vitals, label: "Hospital A", value: 12, display: "12 min" }, { at: doctor, label: "Hospital B", value: 4, display: "4 min" }] },
+  ] };
+}
+
+test("counter, chart and timeline build as takeovers with valid targets, counters and cues", () => {
+  const ctx = makeCtx();
+  try {
+    const out = freeform(ctx, dataSpec(ctx));
+    for (const cls of ["t-counter", "t-timeline", "t-chart"]) assert.ok(out.html.includes(cls), `has ${cls}`);
+    const ids = new Set([...out.html.matchAll(/ id="([^"]+)"/g)].map((m) => m[1]));
+    assert.equal(ids.size, [...out.html.matchAll(/ id="([^"]+)"/g)].length, "ids are unique");
+    for (const m of out.js.matchAll(/tl\.(?:to|set|fromTo)\('#([^']+)'/g)) if (m[1] !== "vwrap") assert.ok(ids.has(m[1]), `tween target #${m[1]} exists`);
+    assert.equal(out.counters.length, 1);
+    const c = out.counters[0];
+    assert.ok(ids.has(c.id) && c.to === 50 && c.suffix === "%" && c.duration >= 0.4 && c.start >= 0, "counter entry matches an element the builder can fill");
+    assert.ok(!out.js.includes("Math.round"), "the counting tween is left to the builder so it gets tick sound");
+    assert.equal(out.cues.filter((q) => q.why.startsWith("timeline step")).length, 3);
+    assert.equal(out.cues.filter((q) => q.why.startsWith("chart bar")).length, 2);
+    assert.ok(out.cues.every((q) => q.t >= 0 && q.t <= ctx.TOTAL - ctx.OUTRO));
+    const starts = out.shots.map((s) => s.start);
+    for (const g of out.groups.filter((x) => x.card !== null && x.start > 0.2)) assert.ok(!starts.includes(g.start), "no camera move is spent under a data takeover");
+    const chart = out.html.match(/id="cb-\d+-0" style="width:([\d.]+)%/)[1];
+    assert.equal(chart, "72.0", "the largest bar takes the full track share");
+  } finally { rmSync(ctx.dir, { recursive: true, force: true }); }
+});
+
+test("data scenes escape their text and reject specs that cannot be drawn", () => {
+  const ctx = makeCtx();
+  try {
+    const { find, words } = ctx;
+    const a = find("what"), b = find("emr", a.start), an = find("an", b.start), rec = find("record");
+    const out = freeform(ctx, { scenes: [{ type: "chart", from: an, to: rec, bars: [{ at: find("electronic"), label: "<img src=x>", value: 3 }, { at: find("medical"), label: "B & C", value: 1 }] }] });
+    assert.ok(out.html.includes("&lt;img src=x&gt;") && out.html.includes("B &amp; C"));
+    const bad = (scene, re) => assert.throws(() => validateSpec({ scenes: [{ from: a, to: b, ...scene }] }, words), re);
+    bad({ type: "counter", value: { at: a, to: 3.5 } }, /whole numbers/);
+    bad({ type: "counter", value: { at: a, from: 9, to: 4 } }, /whole numbers/);
+    bad({ type: "counter", value: { at: find("crucial"), to: 4 } }, /inside the scene/);
+    bad({ type: "counter", value: { at: a, to: 4, suffix: "percent" } }, /value.suffix/);
+    bad({ type: "chart", bars: [{ at: a, label: "one", value: 1 }] }, /2 to 6 bars/);
+    bad({ type: "chart", bars: [{ at: a, label: "one", value: 0 }, { at: b, label: "two", value: 0 }] }, /above 0/);
+    bad({ type: "chart", bars: [{ at: a, label: "x".repeat(30), value: 1 }, { at: b, label: "two", value: 1 }] }, /label must be/);
+    bad({ type: "timeline", steps: [{ at: b, label: "late" }, { at: a, label: "early" }] }, /spoken order/);
+    bad({ type: "timeline", in: "spin", steps: [{ at: a, label: "x" }, { at: b, label: "y" }] }, /unknown "in"/);
+  } finally { rmSync(ctx.dir, { recursive: true, force: true }); }
+});
+
+test("tall data scenes scale down to fit 4:5 and are left at full size on 9:16", () => {
+  assert.equal(fitScale(900, 1920), 1);
+  assert.ok(fitScale(1400, 1350) < 0.85, "a dense chart shrinks on the shorter frame");
+  assert.ok(fitScale(1400, 1920) === 1, "the same chart needs no scaling on 9:16");
+  const bars = (c) => ["that", "is", "only", "half", "of", "the"].slice(0, 6).map((w, i) => ({ at: c.find(w), label: `Bar ${i}`, value: 10 - i }));
+  const build = (H) => {
+    const ctx = makeCtx(); ctx.layout = { W: 1080, H };
+    try { return freeform(ctx, { scenes: [{ type: "chart", from: ctx.find("that"), to: ctx.find("the"), title: "Six bars", bars: bars(ctx) }] }).html; }
+    finally { rmSync(ctx.dir, { recursive: true, force: true }); }
+  };
+  assert.match(build(1350), /class="dwrap" style="transform:scale\(0\.\d+\)"/);
+  assert.ok(!/class="dwrap" style=/.test(build(1920)));
+});
+
 test("the skill documents every scene type and transition the engine accepts", () => {
   const doc = readFileSync(new URL("../.claude/skills/free-form/references/treatments.md", import.meta.url), "utf8");
-  for (const name of ["card", "expand", "versus", "list", "punch", "flash", "push", "zoom", "wipe", "underline", "highlight", "whip"]) assert.ok(doc.includes(`\`${name}\``), `treatments.md mentions ${name}`);
+  for (const name of ["card", "expand", "versus", "list", "punch", "counter", "chart", "timeline", "flash", "push", "zoom", "wipe", "underline", "highlight", "whip"]) assert.ok(doc.includes(`\`${name}\``), `treatments.md mentions ${name}`);
 });

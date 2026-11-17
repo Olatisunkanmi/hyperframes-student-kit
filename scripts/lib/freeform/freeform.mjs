@@ -13,26 +13,36 @@
 //   hero     [word]                       large words inside ordinary caption stacks
 //   marks    [{ word, style }]            "underline" | "highlight" | "accent" on a stack word
 //   serif / sans / breaks                 as in kinetic.mjs
+//   roles    "auto" | { numbers, negations, names: true | [word] }   caption emphasis by what a word is (roles.mjs)
 //   scenes   spoken ranges that get their own treatment, each { type, from, to, in?, out?, ... }:
 //     card    takeover   { glyph?, hero: [word], variant?: "paper" | "ink" | "accent" }
 //     expand  takeover   { parts: [{ at: word }], variant? }        a term unfolded part by part (E / M / R)
 //     versus  takeover   { sides: [{ label, items: [{ at, text }] }, { label, from: word, items }] }
 //     list    overlay    { items: [{ at, text }], title?, slot? }   numbered points beside the speaker
 //     punch   overlay    { word }                                   one word slammed in at full width
+//     counter takeover   { value: { at, to, from?, prefix?, suffix? }, label? }     a whole number counting up, with tick sound
+//     chart   takeover   { title?, bars: [{ at, label, value, display? }] }         horizontal bars growing as each is spoken
+//     timeline takeover  { title?, steps: [{ at, label, caption? }] }               numbered steps joined by a drawing line
+//   (the three data scenes live in data-scenes.mjs)
 //   in / out  transition of a takeover: in "cut" | "flash" | "push" | "zoom" | "wipe", out "cut" | "push"
 //   camera   { zoom: [levels], moves: ["jump" | "whip"], minShot, maxShot, faceY }
+//   allow    [rule]  budget/variety rules (review.mjs) this edit breaks on purpose; the reason goes in PLAN.md
 import {
   FONT_DIR, SLOT_ORDER, SLOT_WIDTH, SMALL_WORDS, buildLines, copyFonts, esc, fontFaces, groupWords, norm, planShots, shown, timeGroups,
 } from "../../../style-library/03-kinetic-serif/kinetic.mjs";
+import { blurOut, blurRise, blurSlide, pop, pulse, shake, slam, sweep } from "../motion/primitives.mjs";
+import { classifyWords, validateRoles } from "./roles.mjs";
+import { RULES, reviewSpec } from "./review.mjs";
+import { DATA_CSS, DATA_DEFAULT_IN, DATA_TYPES, dataScenes, validateDataScene } from "./data-scenes.mjs";
 
-export const TAKEOVERS = new Set(["card", "expand", "versus"]);
+export const TAKEOVERS = new Set(["card", "expand", "versus", ...DATA_TYPES]);
 export const SCENE_TYPES = new Set([...TAKEOVERS, "list", "punch"]);
 export const TRANSITIONS_IN = new Set(["cut", "flash", "push", "zoom", "wipe"]);
 export const TRANSITIONS_OUT = new Set(["cut", "push"]);
 export const MARK_STYLES = new Set(["underline", "highlight", "accent"]);
 export const VARIANTS = new Set(["paper", "ink", "accent"]);
 const bare = (text) => text.replace(/[.,;:!?]+$/, "");
-const DEFAULT_IN = { card: "flash", expand: "push", versus: "push" };
+const DEFAULT_IN = { card: "flash", expand: "push", versus: "push", ...DATA_DEFAULT_IN };
 const DEFAULT_PALETTE = { paper: "#fdfdfd", ink: "#0b0b0d", fg: "#ffffff", accent: "#e3000f" };
 
 /** Fail early, with the scene number, when a spec cannot be built. */
@@ -53,6 +63,7 @@ export function validateSpec(spec, words) {
     if (scene.type === "expand" && scene.parts.some((p) => !bare(p.at.text))) fail("has a part with no letters to show");
     if (scene.type === "punch" && !inRange(scene.word)) fail("needs a word inside the scene");
     if (scene.type === "list" && !(scene.items?.length >= 2 && scene.items.every((it) => inRange(it.at) && it.text))) fail("needs 2+ items, each { at: word, text } inside the scene");
+    if (DATA_TYPES.has(scene.type)) validateDataScene(scene, fail, inRange);
     if (scene.type === "versus") {
       const ok = scene.sides?.length === 2 && scene.sides.every((s) => s.label && s.items?.length && s.items.every((it) => inRange(it.at) && it.text));
       if (!ok || !inRange(scene.sides[1].from)) fail("needs two sides with a label and items, and sides[1].from (the word that introduces the second side)");
@@ -61,6 +72,10 @@ export function validateSpec(spec, words) {
   const ordered = [...(spec.scenes ?? [])].sort((a, b) => a.from.start - b.from.start);
   ordered.forEach((scene, i) => {
     if (i && scene.from.start <= ordered[i - 1].to.start) throw new Error(`freeform: the ${scene.type} scene starting at "${scene.from.text}" overlaps the ${ordered[i - 1].type} scene before it`);
+  });
+  validateRoles(spec.roles, inWords);
+  (spec.allow ?? []).forEach((rule) => {
+    if (!RULES.includes(rule)) throw new Error(`freeform: allow lists unknown rule "${rule}"; known rules: ${RULES.join(", ")}`);
   });
   Object.entries(spec.palette ?? {}).forEach(([name, value]) => {
     if (!/^#[0-9a-f]{3,8}$/i.test(value ?? "")) throw new Error(`freeform: palette.${name} must be a hex colour, got "${value}"`);
@@ -78,6 +93,8 @@ export function freeform(ctx, spec = {}) {
   const scenes = spec.scenes ?? [];
   const heroes = new Set(spec.hero ?? []), serifs = new Set(spec.serif ?? []), sansSet = new Set(spec.sans ?? []);
   const markOf = new Map((spec.marks ?? []).map((m) => [m.word, m.style]));
+  const roleOf = classifyWords(words, spec.roles, new Set([...markOf.keys(), ...heroes]));
+  const ROLE_MARK = { number: "accent", name: "underline" };
   const cam = { zoom: [1.15, 1.38, 1.24, 1.32], moves: ["jump", "whip"], faceY: 54, ...spec.camera };
   const sy = layout.H / 1920;
   copyFonts(dir);
@@ -85,16 +102,16 @@ export function freeform(ctx, spec = {}) {
   const classOf = (w) => heroes.has(w) ? "h" : serifs.has(w) ? "i" : sansSet.has(w) ? "s" : SMALL_WORDS.has(norm(w.text)) ? "i" : "s";
   const groups = timeGroups(groupWords(words, { cards: scenes, breaks: spec.breaks }), until);
   const id = new Map(words.map((w, i) => [w, `fw-${i}`]));
-  const html = [], js = [], cues = [];
+  const html = [], js = [], cues = [], counters = [];
   const at = (t) => r(Math.max(0, t));
-  const wordIn = (word, floor) => js.push(`tl.fromTo('#${id.get(word)}',{opacity:0,filter:'blur(16px)',y:16,scale:1.06},{opacity:1,filter:'blur(0px)',y:0,scale:1,duration:.26,ease:'power2.out'},${at(Math.max(floor, word.start - 0.05))});`);
+  const wordIn = (word, floor) => js.push(blurRise(`#${id.get(word)}`, at(Math.max(floor, word.start - 0.05))));
   const span = (word, cls, style = "", inner = "") => `<span class="kw ${cls}" id="${id.get(word)}"${style ? ` style="${style}"` : ""}>${shown(word.text)}${inner}</span>`;
-  const blurIn = (sel, t, from = "x:-30") => js.push(`tl.fromTo('${sel}',{opacity:0,${from},filter:'blur(12px)'},{opacity:1,x:0,y:0,filter:'blur(0px)',duration:.3,ease:'power2.out'},${at(t)});`);
+  const blurIn = (sel, t, from = "x:-30") => js.push(blurSlide(sel, at(t), from));
   // A stack too short to fade is simply cut by its clip.
-  const exit = (sel, group) => { if (group.end - group.start >= 0.3) js.push(`tl.to('${sel}',{opacity:0,filter:'blur(10px)',duration:.1,ease:'power1.in'},${at(group.end - 0.12)});tl.set('${sel}',{opacity:0},${at(group.end - 0.02)});`); };
+  const exit = (sel, group) => { if (group.end - group.start >= 0.3) js.push(blurOut(sel, at(group.end - 0.12), at(group.end))); };
 
   html.push(`  <div id="kscrim" class="clip" data-start="0" data-duration="${until}" data-track-index="19"></div>`);
-  let slotIndex = 0;
+  let slotIndex = 0, roleStyled = 0;
 
   // ---- ordinary caption stack (speaker on screen) ----
   const stack = (group, gi) => {
@@ -102,9 +119,13 @@ export function freeform(ctx, spec = {}) {
     const lines = buildLines(group.words, classOf).map((line, li) => {
       const heroSize = line.hero ? Math.min(176, Math.floor(SLOT_WIDTH[slot] / (Math.max(4, line.chars) * 0.6))) : 0;
       const one = (w) => {
-        const mark = markOf.get(w);
-        if (mark && mark !== "accent") js.push(`tl.fromTo('#mk-${id.get(w)}',{scaleX:0},{scaleX:1,duration:.32,ease:'power3.out'},${at(w.start + 0.12)});`);
-        return span(w, `${line.cls}${mark ? ` mk-${mark}` : ""}`, heroSize ? `font-size:${heroSize}px` : "", mark && mark !== "accent" ? `<i class="mk" id="mk-${id.get(w)}"></i>` : "");
+        const role = roleOf.get(w);
+        if (role) roleStyled++;
+        const mark = markOf.get(w) ?? ROLE_MARK[role];
+        if (mark && mark !== "accent") js.push(sweep(`#mk-${id.get(w)}`, at(w.start + 0.12)));
+        if (role === "number") js.push(pulse(`#${id.get(w)}`, at(w.start + 0.22)));
+        if (role === "negation") js.push(shake(`#${id.get(w)}`, at(w.start + 0.1)));
+        return span(w, `${line.cls}${mark ? ` mk-${mark}` : ""}${role === "negation" ? " r-neg" : ""}`, heroSize ? `font-size:${heroSize}px` : "", mark && mark !== "accent" ? `<i class="mk" id="mk-${id.get(w)}"></i>` : "");
       };
       return `<div class="kl${li % 2 ? " odd" : ""}">${line.words.map(one).join(" ")}</div>`;
     });
@@ -122,8 +143,8 @@ export function freeform(ctx, spec = {}) {
     const hid = id.get(scene.word);
     html.push(`  <div id="kg-${gi}" class="kg low pn clip" data-start="${group.start}" data-duration="${r(group.end - group.start)}" data-track-index="${20 + (gi % 2)}"><div class="kgi" id="kgi-${gi}">${rest.map(line).join("")}<div class="kl"><span class="kw h mk-underline" id="${hid}" style="font-size:${size}px">${shown(scene.word.text)}<i class="mk" id="mk-${hid}"></i></span></div>${after.map(line).join("")}</div></div>`);
     group.words.filter((w) => w !== scene.word).forEach((w) => wordIn(w, group.start));
-    js.push(`tl.fromTo('#${hid}',{opacity:0,scale:1.7,filter:'blur(22px)'},{opacity:1,scale:1,filter:'blur(0px)',duration:.2,ease:'expo.out'},${at(Math.max(group.start, scene.word.start - 0.04))});`);
-    js.push(`tl.fromTo('#mk-${hid}',{scaleX:0},{scaleX:1,duration:.3,ease:'power3.out'},${at(scene.word.start + 0.16)});`);
+    js.push(slam(`#${hid}`, at(Math.max(group.start, scene.word.start - 0.04))));
+    js.push(sweep(`#mk-${hid}`, at(scene.word.start + 0.16), { duration: 0.3 }));
     exit(`#kgi-${gi}`, group);
     cues.push({ t: scene.word.start, sfx: "hit", gain: -18, why: `punch word: ${shown(scene.word.text)}` });
   };
@@ -173,7 +194,7 @@ export function freeform(ctx, spec = {}) {
     const leadLines = buildLines(lead, () => "s", 16).map((l) => `<div class="kl">${l.words.map((w) => span(w, "cs")).join(" ")}</div>`);
     const rows = scene.parts.map((p, k) => {
       const raw = bare(p.at.text), text = esc(raw);
-      js.push(`tl.fromTo('#xl-${gi}-${k}',{opacity:0,scale:.4,rotation:-12},{opacity:1,scale:1,rotation:0,duration:.3,ease:'back.out(2)'},${at(p.at.start - 0.06)});`);
+      js.push(pop(`#xl-${gi}-${k}`, at(p.at.start - 0.06), { scale: 0.4, rotation: -12 }));
       blurIn(`#${id.get(p.at)}`, p.at.start);
       cues.push({ t: p.at.start - 0.05, sfx: "tick", gain: -10, why: `expand: ${text}` });
       return `<div class="xrow"><span class="xl" id="xl-${gi}-${k}">${esc(raw[0].toUpperCase())}</span><span class="xw" id="${id.get(p.at)}">${esc(raw.slice(1))}</span></div>`;
@@ -200,11 +221,12 @@ export function freeform(ctx, spec = {}) {
     takeover(group, gi, scene, body, "split");
     js.push(`tl.fromTo('#vs-${gi}-a',{height:'100%'},{height:'50%',duration:.42,ease:'expo.inOut'},${at(swap)});`);
     js.push(`tl.fromTo('#vs-${gi}-b',{yPercent:100},{yPercent:0,duration:.42,ease:'expo.inOut'},${at(swap)});`);
-    js.push(`tl.fromTo('#vm-${gi}',{opacity:0,scale:.3},{opacity:1,scale:1,duration:.3,ease:'back.out(2.2)'},${at(swap + 0.26)});`);
+    js.push(pop(`#vm-${gi}`, at(swap + 0.26), { scale: 0.3, ease: "back.out(2.2)" }));
     cues.push({ t: swap, sfx: "whoosh-down", gain: -13, why: `${b.label} pushes in` });
   };
 
-  const RENDER = { card, expand, versus, list, punch };
+  const data = dataScenes({ js, cues, counters, at, blurIn, takeover, frameH: layout.H });
+  const RENDER = { card, expand, versus, list, punch, ...data };
   groups.forEach((group, gi) => (group.card === null ? stack(group, gi) : RENDER[scenes[group.card].type](group, gi, scenes[group.card])));
   html.push(`  <div id="kflash" class="clip" data-start="0" data-duration="${until}" data-track-index="23"></div>`);
 
@@ -243,6 +265,7 @@ ${fontFaces()}
 .mk-underline .mk{left:0;right:0;bottom:-.02em;height:.09em;border-radius:.05em}
 .mk-highlight .mk{left:-.1em;right:-.1em;top:.1em;bottom:.02em;border-radius:.07em;z-index:-1}
 .mk-highlight{text-shadow:none}.mk-accent{color:var(--accent)}
+.kw.r-neg{font-family:'Poppins',sans-serif;font-style:normal;font-weight:700;font-size:92px;letter-spacing:-.04em;text-transform:uppercase;padding-right:0}
 .ls .kgi{gap:14px}
 .lt{font-family:'Playfair Display',serif;font-style:italic;font-weight:500;font-size:76px;margin-bottom:6px}
 .li{display:flex;align-items:baseline;gap:22px;font-family:'Poppins',sans-serif;font-weight:600;font-size:66px;letter-spacing:-.045em;white-space:nowrap}
@@ -272,6 +295,7 @@ ${fontFaces()}
 .vit{display:flex;align-items:center;gap:26px;font-family:'Poppins',sans-serif;font-weight:600;font-size:62px;letter-spacing:-.045em;white-space:nowrap}
 .vit i{flex:none;width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:700;font-size:40px;letter-spacing:0;background:var(--accent);color:#fff}
 .vmid{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-style:italic;font-weight:500;font-size:72px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
-`;
-  return { anchors: {}, html: html.join("\n"), css, js: js.join("\n"), counters: [], cues, shots, groups, fontDir: FONT_DIR };
+${DATA_CSS}`;
+  const review = reviewSpec(spec, { until, takeovers: TAKEOVERS, defaultIn: DEFAULT_IN, roleCount: roleStyled });
+  return { anchors: {}, html: html.join("\n"), css, js: js.join("\n"), counters, cues, shots, groups, review, fontDir: FONT_DIR };
 }

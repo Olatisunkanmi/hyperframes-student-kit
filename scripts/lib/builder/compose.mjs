@@ -22,6 +22,7 @@ import { pathToFileURL } from "node:url";
 import { layoutFor } from "./layout.mjs";
 import { captionGroups, finalWords, loadWords, makeFind, normWord } from "./timeline.mjs";
 import { readMeta } from "./base.mjs";
+import { renderMotionReview } from "../freeform/review.mjs";
 
 const r2 = (n) => +n.toFixed(2);
 const cue = (t, sfx, gain, why) => ({ t: +Math.max(0, t).toFixed(3), sfx, gain, why });
@@ -46,6 +47,10 @@ export async function compose({ dir, root, cfg, format, sfx = false, music = fal
   const ctx = { words, find, H, BUMPER, OUTRO, HB, TOTAL, brand, C, layout, format, r: r2, dir, root };
   const b = await (await import(pathToFileURL(beatsPath).href + `?t=${Date.now()}`)).default(ctx);
   const counters = b.counters ?? [];
+  const review = b.review ?? []; // variety/budget findings from a beats module that checks itself (free-form does)
+  mkdirSync(join(dir, "review"), { recursive: true });
+  writeFileSync(join(dir, "review/motion-review.md"), renderMotionReview(review));
+  writeFileSync(join(dir, "review/motion-review.json"), JSON.stringify(review, null, 2));
   const anchors = { ...b.anchors };
 
   // lower-third anchors (core)
@@ -165,5 +170,5 @@ window.__timelines=window.__timelines||{};window.__timelines['${cfg.slug}']=tl;
   writeFileSync(join(dir, "index.html"), html);
   const metaPath = join(dir, "meta.json");
   if (existsSync(metaPath)) writeFileSync(metaPath, JSON.stringify({ ...JSON.parse(readFileSync(metaPath, "utf8")), width: layout.W, height: layout.H }, null, 2) + "\n");
-  return { format, size: fmt, H, BUMPER, OUTRO, TOTAL, counters: counters.map((c) => `${c.id}: ${c.from}->${c.to} @${r2(c.start)}s`), cues: cues.length, sfx: WITH_SFX, music: WITH_MUSIC };
+  return { format, size: fmt, H, BUMPER, OUTRO, TOTAL, counters: counters.map((c) => `${c.id}: ${c.from}->${c.to} @${r2(c.start)}s`), cues: cues.length, motion: review, sfx: WITH_SFX, music: WITH_MUSIC };
 }

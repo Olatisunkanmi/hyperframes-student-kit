@@ -21,6 +21,7 @@ For one stage, load the matching local skill:
 | Need | Skill |
 | --- | --- |
 | A raw video to edit end to end, or resume a project (DEFAULT entry) | `studio-edit` |
+| One raw video to main edit + clips + reels + punchline videos + draft post copy (gated, resumable) | `linkedin-pipeline` |
 | Reels, Shorts, and short advertisements | `short-form-edit` |
 | Motion-design showreels and brand reels cut to music | `motion-showreel` |
 | A style pack measured from a reference TikTok, Reel, or Short | `style-from-reference` |

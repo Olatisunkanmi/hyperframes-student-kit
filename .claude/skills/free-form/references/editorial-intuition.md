@@ -14,7 +14,9 @@ Read the cleaned transcript sentence by sentence and name what each one does for
 | Definition | "X means...", "X stands for..." | To see the term taken apart | `expand` when the parts are spoken; else `card` |
 | Claim | The sentence the video exists to say | Weight and stillness | `card`, or `punch` if one word carries it |
 | Contrast | "A does this, B does that", "but", "versus" | Both sides visible at once | `versus` |
-| Sequence | "First... then...", steps, a list of three | Order and progress | `list` beside the speaker |
+| Sequence | "First... then...", steps, a list of three | Order and progress | `list` beside the speaker; `timeline` when the order is the point (2 to 5 steps) |
+| Number | A stat the speaker states: "37 percent", "ten hours" | To see the figure land | `counter` (whole numbers) |
+| Magnitudes | Two to six quantities compared: "12 minutes versus 4" | To see which is bigger and by how much | `chart`; `versus` when it is two ideas, not two amounts |
 | Example | "For example...", a story | The speaker; examples are personal | Stacks; a `list` or `versus` only if it has structure |
 | Turn | "But in all honesty...", "the truth is" | A change of temperature | Change of camera framing; a `whip`; an accent `card` |
 | Payoff | The answer to the hook | To recognise the callback | Repeat the hook's word in a new form |
@@ -40,6 +42,8 @@ get a scene. A typical 60 s explainer has 4 to 7 carry lines.
 - The hero word is the word a viewer would repeat to a friend, not the longest or the loudest.
 
 ## 4. Budget
+
+These numbers are checked in code (`scripts/lib/freeform/review.mjs`); see "Motion review" in `treatments.md`.
 
 | Thing | Guide for 60 s | Why |
 | --- | --- | --- |

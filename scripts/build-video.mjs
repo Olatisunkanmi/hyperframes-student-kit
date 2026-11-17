@@ -19,7 +19,7 @@
 // With "all", compose runs twice: once to write the cues, again to mount the audio stems.
 // Exit code 1 when any gate fails.
 
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -78,6 +78,10 @@ for (const [i, stage] of stages.entries()) {
     const final = stages.slice(i + 1).some((s) => s === "render" || s === "review") || stages.slice(0, i).includes("audio");
     const r = await compose({ dir, root, cfg, format: o.format, sfx: o.sfx && final, music: o.music && final });
     say(`compose  ok  ${r.size} ${r.format}; ${r.counters.length} counters, ${r.cues} sound cues${r.sfx ? ", sfx mounted" : ""}${r.music ? ", music mounted" : ""}`);
+    const motionErrors = r.motion.filter((f) => f.level === "error");
+    if (r.motion.length) say(`motion   ${motionErrors.length ? "FAIL" : "warn"} ${motionErrors.length} errors, ${r.motion.length - motionErrors.length} warnings -> review/motion-review.md`);
+    for (const f of r.motion) say(`         ${f.level.toUpperCase()} ${f.rule}: ${f.message}`);
+    if (motionErrors.length) failed = true;
   } else if (stage === "audio") {
     const log = audioStage({ dir, root, cfg, sfx: o.sfx, music: o.music });
     const m = log[0];
@@ -91,6 +95,9 @@ for (const [i, stage] of stages.entries()) {
   } else if (stage === "render") {
     const gate = o.skipReview ? null : checkReviewStamp({ dir, cfg, format: o.format, runId });
     if (gate) { say(`render   BLOCKED ${gate}`); failed = true; continue; }
+    const motionFile = join(dir, "review/motion-review.json");
+    const motionBlock = existsSync(motionFile) ? JSON.parse(readFileSync(motionFile, "utf8")).filter((f) => f.level === "error") : [];
+    if (motionBlock.length) { say(`render   BLOCKED ${motionBlock.length} motion review errors in review/motion-review.md: fix beats.mjs (or list the rule in allow with a reason in PLAN.md) and re-run --stages compose,review`); failed = true; continue; }
     if (o.skipReview) say("render   WARNING pre-render review skipped (--skip-review); record that in VERIFY.md");
     const lint = sh(HF, ["lint"], { cwd: dir });
     const lt = clean(lint.stdout + lint.stderr);

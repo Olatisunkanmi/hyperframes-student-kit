@@ -68,6 +68,7 @@ for all of those (every count-up number gets rising ticks plus a landing sound).
   camera push for a style pack that brings its own (example: `style-library/03-kinetic-serif/kinetic.mjs`). Such an
   engine loads its own fonts from its pack; the brand fonts are still copied but unused. Record the brand override in VERIFY.md.
   The `free-form` skill's engine (`scripts/lib/freeform/freeform.mjs`) builds on the same switches.
+- `voice`: optional voice-master settings, `{ "lufs": -16.5, "tp": -2, "level": true }`. `lufs` sets the loudness target, `level` evens out volume drift, and `tp` lowers the true-peak ceiling (default -1.5). Set `tp: -2` when the loudness gate fails on a true peak just over -1 dBFS: an SFX cue landing on a voice peak adds up to about 0.5 dB, which the default ceiling leaves no room for.
 - `music`: `{ "file": "assets/track.mp3" }` for real music (record its source and licence in VERIFY.md); the synth pad is a placeholder.
 
 ## After every render
