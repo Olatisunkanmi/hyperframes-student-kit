@@ -56,7 +56,9 @@ AskUserQuestion:
           description: "1920x1080. Needs its own layout, so confirm scope before building."
 ```
 
-Build with `node scripts/build-video.mjs <project> --format 4x5|9x16 [--sfx] [--music]` (see docs/BUILDER.md).
+Build with `node scripts/build-video.mjs <project> --format 4x5|9x16 [--sfx] [--music]` (see docs/BUILDER.md). It stops after the
+pre-render review: inspect `review/prerender/<format>/REVIEW.md` and every image it lists, fix, re-run `--stages compose,review`,
+then `--stages render,check`. Never render to discover a layout or footage problem a still would show.
 Per-video graphics go in `<project>/beats.mjs`; counters declared there get tick sound automatically. A format with no layout entry yet needs one added
 and verified on rendered frames, not a silent crop.
 

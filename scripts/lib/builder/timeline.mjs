@@ -32,10 +32,11 @@ export function loadWords(dir, cfg) {
 
 /** Find the cold-open hook range on the cleaned timeline from three spoken words. */
 export function locateHook(words, hook) {
-  const after = words.findIndex((w) => normWord(w.text) === normWord(hook.after));
+  // `after` is optional: omit it when the hook is the opening line of the clip.
+  const after = hook.after == null ? -1 : words.findIndex((w) => normWord(w.text) === normWord(hook.after));
   const first = words.findIndex((w, i) => i > after && normWord(w.text) === normWord(hook.from));
   const last = words.findIndex((w, i) => i > first && normWord(w.text) === normWord(hook.to));
-  if (after < 0 || first < 0 || last < 0) throw new Error(`hook words not found in order: ${hook.after} ... ${hook.from} ... ${hook.to}`);
+  if ((hook.after != null && after < 0) || first < 0 || last < 0) throw new Error(`hook words not found in order: ${hook.after} ... ${hook.from} ... ${hook.to}`);
   return { HS: +(words[first].start - hook.pre).toFixed(3), HE: +(words[last].end + hook.post).toFixed(3) };
 }
 

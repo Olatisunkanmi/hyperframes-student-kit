@@ -80,6 +80,13 @@ Agent 3 asks the registry for "a `tier1` `stat` card in style `vox-explainer`", 
 
 Motion is half the identity, so previews are short MP4 loops (2-3s) + a poster PNG, one per card, in the style's `preview/`. Because each card is a valid composition, a preview is produced by rendering the card on its own (via the HyperFrames CLI) and grabbing frame 1 as the poster. The preview script is added once the first real card exists (so it's tested against something real).
 
+## Engine packs
+
+A style whose captions are the graphics can ship an engine instead of cards: a `.mjs` beside `style.json` that a
+project's `beats.mjs` calls with `scripts/build-video.mjs` (see docs/BUILDER.md). Name it in `style.json` as `"engine"`,
+leave `"cards": []`, keep its fonts and their licence texts in `fonts/`, and put its unit tests in `tests/`.
+`03-kinetic-serif` is the first one.
+
 ## Notes
 
 - Nate's `style-templates/` (dark-graph-paper, left-glass-popout) are **reference only** — not part of this library. Borrow ideas, don't port wholesale.

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# name: style-ref
+# description: Entry point for the style-from-reference analyzer. Runs the sfr package inside its own venv.
+# usage: style-ref analyze <url-or-file> --out <dir> [--skip stems,tags,transcript] [--force]
+#        style-ref frames <dir> --range <start> <end> [--fps 8]
+#        style-ref doctor | warm | selftest
+# env: STYLE_REF_HOME (default ~/.cache/style-from-reference) holds the venv and every model.
+# Python runs isolated (-I) and without bytecode (-B): downloaded media is untrusted input, and no
+# __pycache__ may land in the skill folder.
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export STYLE_REF_HOME="${STYLE_REF_HOME:-$HOME/.cache/style-from-reference}"
+export HF_HOME="$STYLE_REF_HOME/models/hf"
+export TORCH_HOME="$STYLE_REF_HOME/models/torch"
+export HF_HUB_DISABLE_TELEMETRY=1
+export TOKENIZERS_PARALLELISM=false
+PYTHON="$STYLE_REF_HOME/venv/bin/python"
+
+if [ "${1:-}" = "selftest" ]; then
+  # Pure-logic tests: standard library only, so any python3 works and no venv is needed.
+  [ -x "$PYTHON" ] || PYTHON="$(command -v python3)"
+  exec "$PYTHON" -I -B -m unittest discover -s "$HERE/tests" -t "$HERE"
+fi
+
+if [ ! -x "$PYTHON" ]; then
+  echo "style-ref: not installed yet. Run: $HERE/setup.sh" >&2
+  exit 2
+fi
+
+# Make the sfr package importable under -I. Rewritten on each run so a moved checkout keeps working.
+for site in "$STYLE_REF_HOME"/venv/lib/python*/site-packages; do
+  printf '%s\n' "$HERE" > "$site/sfr.pth"
+done
+
+exec "$PYTHON" -I -B -m sfr.cli "$@"

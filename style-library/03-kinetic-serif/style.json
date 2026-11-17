@@ -1,0 +1,24 @@
+{
+  "$schema": "../registry.schema.json",
+  "id": "kinetic-serif",
+  "name": "Kinetic Serif Mix",
+  "number": "03",
+  "status": "draft",
+  "inspiration": "Measured from a user-supplied 9:16 podcast-clip reference with style-from-reference (see reference-profile.json). No reference media is stored here.",
+  "summary": "Word-by-word captions that blur in around the speaker, mixing a tight bold sans with an italic serif, plus white full-screen text cards with one red glyph. For talking-head shorts with no B-roll.",
+  "palette": {
+    "bg": "#fdfdfd",
+    "fg": "#ffffff",
+    "accent": "#e3000f",
+    "notes": "White type over darkened footage; text cards are near-white with near-black type (#0b0b0d) and a single red glyph."
+  },
+  "fonts": {
+    "display": "Poppins",
+    "body": "Playfair Display",
+    "mono": "Poppins"
+  },
+  "motion": "Fluid in, snappy out: each word blurs in over 0.26 s on its spoken time; stacks blur out in 0.1 s; hard cuts and hard zoom jumps between shots.",
+  "transitions": "Hard cuts only. A two-frame red flash before a text card. No wipes or crossfades.",
+  "engine": "kinetic.mjs",
+  "cards": []
+}

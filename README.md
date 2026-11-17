@@ -41,7 +41,7 @@ https://github.com/user-attachments/assets/4ad48761-d14c-407a-9dec-1b76a9afb04a
 ## What's included
 
 - **[Editing playbook](docs/EDITING-PLAYBOOK.md):** how Nate's videos get edited with AI, the measured house reel style, the B-roll, caption, and sound rules, and how every note becomes a rule in a skill.
-- **16 skills**, mirrored for both assistants, with their helper scripts and references.
+- **20 skills**, mirrored for both assistants, with their helper scripts and references.
 - **A branded studio workflow** (this fork): one entry skill (`studio-edit`), a reusable builder, audio gates, sound design, and
   session cleanup. See [Branded studio workflow](#branded-studio-workflow-this-fork).
 - **406 draft motion-graphics cards** across two styles, with manifests, CSS tokens, and editable slots.

@@ -13,7 +13,9 @@ function node(root, script, args) {
 export function audioStage({ dir, root, cfg, sfx, music }) {
   const { TOTAL } = readMeta(dir);
   const log = [];
-  log.push(JSON.parse(node(root, "audio-master.mjs", [join(dir, "assets/voice.wav"), "--out", join(dir, "assets/voice.master.wav")]).replace(/^[^{]*/, "")));
+  const v = cfg.voice ?? {}; // optional: { "level": true } evens out volume drift; { "lufs": -15 } sets a louder target
+  const vArgs = [...(v.level ? ["--level"] : []), ...(v.lufs !== undefined ? ["--lufs", String(v.lufs)] : []), ...(v.gains ?? []).flatMap((g) => ["--gain", g.join(",")])]; // gains: [[startSec, endSec, dB]] on the final timeline
+  log.push(JSON.parse(node(root, "audio-master.mjs", [join(dir, "assets/voice.wav"), "--out", join(dir, "assets/voice.master.wav"), ...vArgs]).replace(/^[^{]*/, "")));
   if (sfx) {
     if (!existsSync(join(root, "sounds/sfx/hit.wav"))) node(root, "sound-design.mjs", ["generate"]);
     log.push(node(root, "sound-design.mjs", ["mix", "--cues", join(dir, "assets/sfx-cues.json"), "--duration", String(TOTAL), "--out", join(dir, "assets/sfx.stem.wav")]).trim());

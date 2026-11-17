@@ -29,6 +29,7 @@
     "build-video": "node scripts/build-video.mjs",
     "new-project": "node scripts/new-project.mjs",
     "status": "node scripts/project-status.mjs",
+    "clips": "node scripts/make-clips.mjs",
     "stop": "node scripts/stop-services.mjs"
   },
   "engines": {

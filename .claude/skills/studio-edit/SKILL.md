@@ -80,10 +80,16 @@ audio to their service. The free local option is `scripts/transcribe-local.mjs`.
    the user), `emphasis` (numbers). **Write `beats.mjs`**: one idea per beat, anchored to spoken words, graphics that show the example
    or consequence rather than restating captions, face clear, brand only. Every count-up goes in `counters` (it gets tick sound
    automatically; preflight blocks a count-up with no counter cue).
-8. **Build**: `node scripts/build-video.mjs <project> --format <answer> [--sfx] [--music]` (draft). It masters the voice to -16 LUFS,
-   renders, lints (0 errors required) and runs preflight plus the loudness gate. Exit 1 means a gate failed: fix it, do not bypass it.
-9. **Look at the actual frames** (hero frames of every graphic, hook, bumper, lower-third, outro, cut joins) and fix what is wrong.
-   A passing lint never proves visual quality.
+8. **Build to review, not to render**: `node scripts/build-video.mjs <project> --format <answer> [--sfx] [--music]`. It builds the
+   base, composes, masters the voice to -16 LUFS, then runs the **review** stage and stops: stills of every graphic, the hook,
+   lower-third, bumper and outro, plus a frame strip and luma flag at every join of the cleaned cut, in
+   `review/prerender/<format>/REVIEW.md`. **Open every image.** Fix overflow, face coverage, half-built states, and any occluded or
+   flashed frame at a join (a hand over the lens at a retake is a cut problem: fix the cut, not the graphics). Re-run
+   `--stages compose,review` (about 30 s) until clean. The render stage refuses a stale or unread review. Never render to find out.
+   When you move or reorder a segment, also check its first and last frames on the cleaned footage before building.
+9. **Render once**: `--stages render,check` (lint 0 errors, preflight, loudness). Exit 1 means a gate failed: fix it, do not bypass it.
+   Then inspect the encoded draft's opening, transitions and joins. A passing lint never proves visual quality. One draft per
+   round of user feedback; batch all known fixes before re-rendering.
 10. **Listening gate**: you cannot hear. Run `node scripts/audio-joins.mjs <render> --out-dir <project>/review/joins --edl <silence-edl>
     --edl <mistakes-edl> --offset <hook + bumper - bodyStart> --joins <hook length> --words <project>/assets/transcript.json --asr`
     and give the user the flagged clips to audition. Say plainly what nobody has heard (counter ticks, effects, music, joins).

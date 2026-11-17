@@ -1,6 +1,6 @@
 {
   "generated_by": "scripts/style-library/build-registry.mjs",
-  "styleCount": 2,
+  "styleCount": 3,
   "cardCount": 406,
   "tiers": [
     "tier1",
@@ -8595,6 +8595,27 @@
           }
         }
       ]
+    },
+    {
+      "id": "kinetic-serif",
+      "number": "03",
+      "name": "Kinetic Serif Mix",
+      "status": "draft",
+      "folder": "03-kinetic-serif",
+      "inspiration": "Measured from a user-supplied 9:16 podcast-clip reference with style-from-reference (see reference-profile.json). No reference media is stored here.",
+      "palette": {
+        "bg": "#fdfdfd",
+        "fg": "#ffffff",
+        "accent": "#e3000f",
+        "notes": "White type over darkened footage; text cards are near-white with near-black type (#0b0b0d) and a single red glyph."
+      },
+      "fonts": {
+        "display": "Poppins",
+        "body": "Playfair Display",
+        "mono": "Poppins"
+      },
+      "cardCount": 0,
+      "cards": []
     }
   ],
   "warnings": []

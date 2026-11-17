@@ -9,6 +9,8 @@
 //   --tp <n>          true-peak ceiling in dBTP (default -1.5)
 //   --no-denoise      skip the gentle noise reduction
 //   --no-highpass     skip the 70 Hz rumble filter
+//   --gain s,e,dB     lift a too-quiet stretch (seconds on the input timeline, ramped 0.15 s); repeatable
+//   --level           even out loud/quiet passages (dynaudnorm) before normalizing; use when a take drifts in volume
 //
 // Chain: (mono -> dual-mono stereo) -> highpass 70 Hz -> afftdn (light) -> loudnorm pass 1 (measure) -> loudnorm pass 2 (linear apply).
 // Run this on the VOICE stem before mixing music/SFX, then point the composition's
@@ -21,10 +23,10 @@ import { measureLoudness, judge, TARGET } from "./lib/loudness.mjs";
 
 const args = argv.slice(2);
 if (!args.length || args.includes("--help")) {
-  console.log("Usage: node scripts/audio-master.mjs <input> --out <output.wav> [--lufs -16] [--tp -1.5] [--no-denoise] [--no-highpass]");
+  console.log("Usage: node scripts/audio-master.mjs <input> --out <output.wav> [--lufs -16] [--tp -1.5] [--no-denoise] [--no-highpass] [--level]");
   exit(args.length ? 0 : 1);
 }
-const o = { input: null, out: null, lufs: TARGET.lufs, tp: TARGET.truePeak, denoise: true, highpass: true };
+const o = { input: null, out: null, lufs: TARGET.lufs, tp: TARGET.truePeak, denoise: true, highpass: true, level: false, gains: [] };
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
   if (a === "--out") o.out = args[++i];
@@ -32,6 +34,8 @@ for (let i = 0; i < args.length; i++) {
   else if (a === "--tp") o.tp = Number(args[++i]);
   else if (a === "--no-denoise") o.denoise = false;
   else if (a === "--no-highpass") o.highpass = false;
+  else if (a === "--level") o.level = true;
+  else if (a === "--gain") o.gains.push(args[++i].split(",").map(Number));
   else if (a.startsWith("--")) { console.error(`unknown option: ${a}`); exit(1); }
   else o.input = a;
 }
@@ -44,7 +48,9 @@ const ch = Number(spawnSync("ffprobe", ["-v", "error", "-select_streams", "a:0",
 const pre = [];
 if (ch === 1) pre.push("pan=stereo|c0=c0|c1=c0");
 if (o.highpass) pre.push("highpass=f=70");
+for (const [gs, ge, db] of o.gains) pre.push(`volume=volume='1+(${(10 ** (db / 20) - 1).toFixed(4)})*clip(min((t-${gs})/0.15,(${ge}-t)/0.15),0,1)':eval=frame`);
 if (o.denoise) pre.push("afftdn=nr=8:nf=-50");
+if (o.level) pre.push("dynaudnorm=f=150:g=9:p=0.9:m=15:s=10,acompressor=threshold=0.05:ratio=3:attack=10:release=150");
 const chainPre = pre.length ? pre.join(",") + "," : "";
 
 // Pass 1: measure on the cleaned signal.

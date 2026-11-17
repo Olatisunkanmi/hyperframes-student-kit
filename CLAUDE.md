@@ -23,6 +23,10 @@ For one stage, load the matching local skill:
 | A raw video to edit end to end, or resume a project (DEFAULT entry) | `studio-edit` |
 | Reels, Shorts, and short advertisements | `short-form-edit` |
 | Motion-design showreels and brand reels cut to music | `motion-showreel` |
+| A style pack measured from a reference TikTok, Reel, or Short | `style-from-reference` |
+| A content-led short: treatments chosen per line (cards, acronym build, split screen, punch words, transitions) | `free-form` |
+| B-roll-heavy vlogs from a folder of clips plus a voiceover | `vlog-edit` |
+| Standalone short clips cut from a finished video's original recordings | `clip-harvest` |
 | Existing May Shorts example maintenance | `short-form-video` |
 | New motion-graphics video from a brief | `make-a-video` |
 | Website-inspired compositions | `website-to-hyperframes` |
@@ -51,7 +55,8 @@ filler words), then plan and build motion graphics only where they clarify or
 reinforce a spoken point (`video-storytelling`, `hyperframes-video-beats`),
 then verify and render a draft. Show the filler and mistake cut list and the
 beat sheet for approval before rendering. The user owns publishing.
-Build with `node scripts/build-video.mjs <project> --format ...` (docs/BUILDER.md); per-video graphics live in
+Build with `node scripts/build-video.mjs <project> --format ...` (docs/BUILDER.md): it stops at a pre-render review; open
+`review/prerender/<format>/REVIEW.md`, fix, then `--stages render,check` (render is blocked until reviewed). Per-video graphics live in
 `<project>/beats.mjs`. Before building any NEW video, ask the platform/format with AskUserQuestion (LinkedIn 4:5 recommended, 9:16,
 both, 16:9); never assume. Brand order: hook, 2 s monogram bumper, body, outro card (brand/BRAND.md).
 Transcription: ElevenLabs Scribe (`scripts/transcribe-elevenlabs.mjs`) is the default and the

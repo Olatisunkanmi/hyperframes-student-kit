@@ -1,0 +1,35 @@
+/* Style tokens for Kinetic Serif Mix. kinetic.mjs writes the same values into the composition it builds;
+   change them in both places. */
+
+:root {
+  /* palette (mirror style.json + DESIGN.md) */
+  --bg: #fdfdfd;            /* text-card background */
+  --fg: #ffffff;            /* caption type over footage */
+  --ink: #0b0b0d;           /* type on text cards */
+  --accent: #e3000f;        /* the one glyph on a text card, and the pre-card flash */
+  --scrim: rgba(6, 8, 20, 0.62);
+
+  /* typography */
+  --font-display: "Poppins", system-ui, sans-serif;        /* 600 body words, 700 hero words */
+  --font-body: "Playfair Display", Georgia, serif;         /* 500 italic: small words, card hero line */
+  --font-mono: "Poppins", ui-monospace, monospace;
+
+  --size-display: 176px;    /* hero word ceiling; fitted down to the slot width */
+  --size-headline: 96px;    /* italic serif words */
+  --size-body: 84px;        /* sans words */
+  --size-label: 80px;       /* small line on a text card */
+  --tracking-sans: -0.05em;
+  --leading: 0.94;
+
+  /* motion */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-in: 0.26s;
+  --dur-out: 0.1s;
+  --blur-in: 16px;
+
+  /* spacing / shape */
+  --radius: 0px;
+  --pad: 70px;
+}

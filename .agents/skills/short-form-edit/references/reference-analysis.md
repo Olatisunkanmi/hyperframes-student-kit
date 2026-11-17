@@ -3,6 +3,9 @@
 Use a reference the student supplies and has permission to use. Keep the recording
 and analysis inside the private video project. Do not copy its script or assets.
 
+For measured cuts, tempo, loudness, and sound-effect timing, or to keep the result as a
+reusable style pack, run the `style-from-reference` skill first and read its report.
+
 ## Watch and record
 
 Watch the full video once for its promise and payoff, then again with timestamps.

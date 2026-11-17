@@ -1,0 +1,13 @@
+# Python dependencies for the style-from-reference analyzer (Python 3.10-3.12).
+# torch and torchaudio are installed by setup.sh first so Linux servers get the CPU wheels.
+# demucs 4.0.1 saves stems through torchaudio.save, which changed in torchaudio 2.9: keep the pin.
+torch==2.5.1
+torchaudio==2.5.1
+demucs==4.0.1
+librosa>=0.10.2,<0.12
+soundfile>=0.12
+transformers>=4.44,<5
+faster-whisper>=1.0,<2
+Pillow>=10.1
+numpy
+yt-dlp

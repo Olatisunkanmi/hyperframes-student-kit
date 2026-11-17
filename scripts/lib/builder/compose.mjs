@@ -2,11 +2,13 @@
 //
 // The core owns everything that is the same in every video: brand fonts and tokens, the video + voice master audio,
 // captions (navy bar), lower-third, slow camera push, count-up tweens, bumper, outro, and the cues for all of those.
+// video.json can switch three of those off for a style pack that brings its own (see style-library/03-kinetic-serif):
+//   "captions": false, "lowerThird": false, "camera": false
 // Per-video graphics come from <project>/beats.mjs, a module whose default export is
 //
 //   (ctx) => ({ anchors, html, css, js, counters, cues })
 //
-//   ctx      { words, find(text, from?, part?), H, BUMPER, OUTRO, HB, TOTAL, brand, C, layout, format, r }
+//   ctx      { words, find(text, from?, part?), H, BUMPER, OUTRO, HB, TOTAL, brand, C, layout, format, r, dir, root }
 //   anchors  { name: wordObject } (word objects from ctx.find); exposed to js as A / T(name, 0|1) = start|end
 //   html     overlay clips. Use class="panel clip" for a card; give each clip a unique data-track-index >= 20
 //   css      extra CSS (core already provides .panel .disp .lab .bar)
@@ -41,21 +43,21 @@ export async function compose({ dir, root, cfg, format, sfx = false, music = fal
   // per-video beats
   const beatsPath = join(dir, "beats.mjs");
   if (!existsSync(beatsPath)) throw new Error(`missing ${beatsPath}`);
-  const ctx = { words, find, H, BUMPER, OUTRO, HB, TOTAL, brand, C, layout, format, r: r2 };
+  const ctx = { words, find, H, BUMPER, OUTRO, HB, TOTAL, brand, C, layout, format, r: r2, dir, root };
   const b = await (await import(pathToFileURL(beatsPath).href + `?t=${Date.now()}`)).default(ctx);
   const counters = b.counters ?? [];
   const anchors = { ...b.anchors };
 
   // lower-third anchors (core)
   const lt = cfg.lowerThird;
-  anchors.ltStart = find(lt.startWord, HB); anchors.ltName = find(lt.nameWord, HB); anchors.ltEnd = find(lt.endWord, HB);
+  if (lt) { anchors.ltStart = find(lt.startWord, HB); anchors.ltName = find(lt.nameWord, HB); anchors.ltEnd = find(lt.endWord, HB); }
   const A = anchors;
 
   // sound cues: counters first (every count-up gets ticks + landing), then bumper/lower-third/outro, then beats
   const cues = [
     ...counters.map((c) => ({ type: "counter", t: +c.start.toFixed(3), duration: c.duration, from: c.from, to: c.to, ease: c.ease ?? "power2.out", gain: c.gain ?? -12, landing: c.land ?? "ping", landingGain: c.landGain ?? -8, why: c.why ?? c.id })),
     ...(BUMPER ? [cue(H - 0.3, "whoosh-up", -2, "hook -> monogram bumper"), cue(H + 0.12, "hit", -10, "monogram lands"), cue(H + 0.55, "ping", -12, "bumper accent bar")] : []),
-    cue(A.ltStart.start - 0.1, "pop", -11, "lower-third enters"),
+    ...(lt ? [cue(A.ltStart.start - 0.1, "pop", -11, "lower-third enters")] : []),
     ...(b.cues ?? []).map((c) => cue(c.t, c.sfx, c.gain, c.why)),
     ...(OUTRO ? [cue(TOTAL - OUTRO + 0.12, "pop", -10, "outro monogram"), cue(TOTAL - OUTRO + 0.65, "ping", -12, "outro accent bar")] : []),
   ];
@@ -65,7 +67,7 @@ export async function compose({ dir, root, cfg, format, sfx = false, music = fal
 
   // captions: navy bar; emphasis words (numbers) in amber, which is legal as text only on navy
   const emph = new Set(cfg.emphasis.map(normWord));
-  const groups = captionGroups(words, TOTAL);
+  const groups = cfg.captions === false ? [] : captionGroups(words, TOTAL);
   const capHtml = groups.map((g, gi) => `<div class="cg" id="cg-${gi}"><div class="cgb">${g.words.map((w) => `<span class="${emph.has(normWord(w.text)) ? "w ac" : "w"}">${w.text.replace(/[.,:]$/, "")}</span>`).join(" ")}</div></div>`).join("");
 
   const runtime = { H, TOTAL, OUTRO, K: layout.k, A: Object.fromEntries(Object.entries(A).map(([k, v]) => [k, [r2(v.start), r2(v.end)]])), caps: groups.map((g) => [r2(g.start), r2(g.end)]), counters };
@@ -115,17 +117,17 @@ ${b.css ?? ""}
 ${WITH_SFX ? `  <audio id="sfx" data-start="0" data-duration="${TOTAL}" data-track-index="10" src="assets/sfx.stem.wav" data-volume="1" data-loudness-exempt></audio>` : ""}
 ${WITH_MUSIC ? `  <audio id="music" data-start="0" data-duration="${TOTAL}" data-track-index="11" src="assets/music.stem.wav" data-volume="1" data-loudness-exempt></audio>` : ""}
 ${b.html ?? ""}
-  <div id="lt" class="clip" data-start="${r2(A.ltStart.start - 0.1)}" data-duration="${r2(A.ltEnd.start - A.ltStart.start + 0.9)}" data-track-index="3">
+${lt ? `  <div id="lt" class="clip" data-start="${r2(A.ltStart.start - 0.1)}" data-duration="${r2(A.ltEnd.start - A.ltStart.start + 0.9)}" data-track-index="3">
     <div class="rule" id="ltr"></div>
     <div class="barn" id="ltb"><div class="n">${brand.name}</div><div class="t">${brand.title}</div></div>
-  </div>
+  </div>` : ""}
 ${BUMPER ? `  <div id="bump" class="full clip" data-start="${H}" data-duration="${BUMPER}" data-track-index="12">
     <div class="mono" id="bmono">${brand.monogram}</div><div class="bar" id="bbar"></div>
   </div>` : ""}
 ${OUTRO ? `  <div id="outro" class="full clip" data-start="${r2(TOTAL - OUTRO)}" data-duration="${OUTRO}" data-track-index="13">
     <div class="mono" id="omono">${brand.monogram}</div><div class="tag" id="otag">${cfg.outro.text}</div><div class="bar" id="obar"></div>
   </div>` : ""}
-  <div id="caps" class="clip" data-start="0" data-duration="${TOTAL}" data-track-index="8">${capHtml}</div>
+${groups.length ? `  <div id="caps" class="clip" data-start="0" data-duration="${TOTAL}" data-track-index="8">${capHtml}</div>` : ""}
 
 <script>
 var C=${JSON.stringify(runtime)};var A=C.A;
@@ -133,11 +135,11 @@ function T(k,i){return A[k][i||0];}
 gsap.set('.panel',{scale:C.K});
 var tl=gsap.timeline({paused:true});
 // camera: hook punch, then slow push on the wrapper
-tl.fromTo('#vwrap',{scale:1.06},{scale:1,duration:C.H,ease:'power2.out'},0);
-tl.fromTo('#vwrap',{scale:1},{scale:1.035,duration:C.TOTAL-C.H,ease:'none'},C.H);
-// COUNTERS (same config as the counter sound cues)
+${cfg.camera === false ? "// camera owned by beats.mjs" : `tl.fromTo('#vwrap',{scale:1.06},{scale:1,duration:C.H,ease:'power2.out'},0);
+tl.fromTo('#vwrap',{scale:1},{scale:1.035,duration:C.TOTAL-C.H,ease:'none'},C.H);`}
+${counters.length ? `// COUNTERS (same config as the counter sound cues)
 C.counters.forEach(function(c){var o={v:c.from};var el=document.getElementById(c.id);
- tl.to(o,{v:c.to,duration:c.duration,ease:c.ease||'power2.out',onUpdate:function(){var n=Math.round(o.v);el.textContent=n+(c.plusAtEnd&&n>=c.to?'+':'')+(c.suffix||'');}},c.start);});
+ tl.to(o,{v:c.to,duration:c.duration,ease:c.ease||'power2.out',onUpdate:function(){var n=Math.round(o.v);el.textContent=n+(c.plusAtEnd&&n>=c.to?'+':'')+(c.suffix||'');}},c.start);});` : "// no counters in this video"}
 // ---- per-video beats ----
 ${b.js ?? ""}
 // ---- bumper + outro ----
@@ -148,11 +150,11 @@ tl.from('#omono',{scale:.6,opacity:0,duration:.45,ease:'back.out(1.8)'},os+0.08)
 tl.from('#otag',{opacity:0,y:24,duration:.45,ease:'power3.out'},os+0.35);
 tl.from('#obar',{scaleX:0,duration:.5,ease:'power3.out'},os+0.65);` : ""}
 // ---- lower-third ----
-tl.from('#lt',{opacity:0,x:-80,duration:.4,ease:'power3.out'},T('ltStart')-0.1);
+${lt ? `tl.from('#lt',{opacity:0,x:-80,duration:.4,ease:'power3.out'},T('ltStart')-0.1);
 tl.from('#ltr',{scaleX:0,duration:.45,ease:'power2.out'},T('ltStart')-0.05);
 tl.from('#ltb .n',{opacity:0,y:14,duration:.4,ease:'expo.out'},T('ltName')-0.05);
 tl.from('#ltb .t',{opacity:0,y:10,duration:.35,ease:'power2.out'},T('ltName',1));
-tl.to('#lt',{opacity:0,x:-50,duration:.25,ease:'power2.in'},T('ltEnd')+0.6);
+tl.to('#lt',{opacity:0,x:-50,duration:.25,ease:'power2.in'},T('ltEnd')+0.6);` : "// no lower-third"}
 // ---- captions (hard kill after each group) ----
 C.caps.forEach(function(c,i){var el='#cg-'+i;
  tl.fromTo(el,{opacity:0,y:12},{opacity:1,y:0,duration:.12,ease:'power2.out'},c[0]-0.02);

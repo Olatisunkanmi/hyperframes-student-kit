@@ -7,8 +7,14 @@ Start a project with `node scripts/new-project.mjs <slug> --raw <video>`; check 
 `node scripts/project-status.mjs <project>`. End every session with `npm run stop`.
 
 ```sh
-node scripts/build-video.mjs video-projects/<slug> --format 4x5|9x16 [--sfx] [--music] [--quality draft|standard] [--tag v2]
+node scripts/build-video.mjs video-projects/<slug> --format 4x5|9x16 [--sfx] [--music]          # stops after review
+#   inspect review/prerender/<format>/REVIEW.md and every image it lists; fix beats.mjs / the cut;
+node scripts/build-video.mjs video-projects/<slug> --format 4x5 [--sfx] [--music] --stages compose,review   # seconds, repeat until clean
+node scripts/build-video.mjs video-projects/<slug> --format 4x5 [--sfx] [--music] --stages render,check [--quality draft|standard] [--tag v2]
 ```
+**Look before you render.** A render takes minutes; the review stage takes about 30 seconds. Every visual problem that can be
+seen on a still (text overflow, a card over the face) or in the cleaned footage (a hand over the lens at a retake, a black
+frame at a join) must be found in the review, not in a draft. Aim for one draft per round of user feedback.
 
 `--format` is **required** and has no default: ask the user which platform it is for (see the skills), every time.
 Formats live in `scripts/lib/builder/layout.mjs`; a new one needs a layout entry checked on rendered frames.
@@ -19,10 +25,11 @@ Formats live in `scripts/lib/builder/layout.mjs`; a new one needs a layout entry
 | base | cold-open hook + bumper gap + cleaned video + outro slot -> `assets/base.mp4`, `base-4x5.mp4`, `voice.wav`, `base.meta.json` |
 | compose | `index.html`, final-timeline `assets/transcript.json`, `assets/sfx-cues.json` (counter ticks included) |
 | audio | voice master (stereo, -16 LUFS), SFX stem (`--sfx`), music bed (`--music`) |
-| render | `hyperframes lint` must be 0 errors, then renders to `renders/<slug>-<format>-<draft|final>[-tag].mp4` |
+| review | stills of every overlay clip (mid + settled), lower-third, bumper, outro and the opening, plus a 1 s frame strip and a luma flag at every join of the cleaned cut (hook in/out, body start, each editorial cut; `assets/clean.joins.txt` overrides the EDL) -> `review/prerender/<format>/REVIEW.md` |
+| render | **blocked** unless a review of this exact `index.html` + cleaned cut was written by an earlier run (`--skip-review` bypasses it; record that). Then `hyperframes lint` must be 0 errors, then renders to `renders/<slug>-<format>-<draft|final>[-tag].mp4` |
 | check | `preflight` (loudness, counter sound, structure) and `audio-check` on the render |
 
-Run a subset with `--stages base,compose`. Exit code 1 when a gate fails. Gates are signal checks: a human still
+The default run is `base,compose,audio,compose,review` and stops before rendering. Run a subset with `--stages base,compose`. Exit code 1 when a gate fails. Gates are signal checks: a human still
 listens (`scripts/audio-joins.mjs`) and watches.
 
 ## What the core owns
@@ -49,6 +56,10 @@ for all of those (every count-up number gets rising ticks plus a landing sound).
 - `hook`: three spoken words in order. The hook is the clip from `from` (minus `pre`) to `to` (plus `post`) on the cleaned timeline,
   played first. Choose a truthful, specific line from the speaker's own words. `bumper: 0` / `outro.seconds: 0` turn those off.
 - `lowerThird`: spoken words that cue the name bar. Name and title come from the brand file.
+- `"captions": false`, `"lowerThird": false`, `"camera": false` switch off the core's brand captions, name bar and slow
+  camera push for a style pack that brings its own (example: `style-library/03-kinetic-serif/kinetic.mjs`). Such an
+  engine loads its own fonts from its pack; the brand fonts are still copied but unused. Record the brand override in VERIFY.md.
+  The `free-form` skill's engine (`scripts/lib/freeform/freeform.mjs`) builds on the same switches.
 - `music`: `{ "file": "assets/track.mp3" }` for real music (record its source and licence in VERIFY.md); the synth pad is a placeholder.
 
 ## `<project>/beats.mjs` (the per-video part)
