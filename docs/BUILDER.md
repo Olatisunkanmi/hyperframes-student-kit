@@ -10,7 +10,7 @@ Start a project with `node scripts/new-project.mjs <slug> --raw <video>`; check 
 node scripts/build-video.mjs video-projects/<slug> --format 4x5|9x16 [--sfx] [--music]          # stops after review
 #   inspect review/prerender/<format>/REVIEW.md and every image it lists; fix beats.mjs / the cut;
 node scripts/build-video.mjs video-projects/<slug> --format 4x5 [--sfx] [--music] --stages compose,review   # seconds, repeat until clean
-node scripts/build-video.mjs video-projects/<slug> --format 4x5 [--sfx] [--music] --stages render,check [--quality draft|standard] [--tag v2]
+node scripts/build-video.mjs video-projects/<slug> --format 4x5 [--sfx] [--music] --stages render,check [--quality draft|standard|high] [--tag v2]
 ```
 **Look before you render.** A render takes minutes; the review stage takes about 30 seconds. Every visual problem that can be
 seen on a still (text overflow, a card over the face) or in the cleaned footage (a hand over the lens at a retake, a black
@@ -55,12 +55,26 @@ for all of those (every count-up number gets rising ticks plus a landing sound).
 ```
 - `hook`: three spoken words in order. The hook is the clip from `from` (minus `pre`) to `to` (plus `post`) on the cleaned timeline,
   played first. Choose a truthful, specific line from the speaker's own words. `bumper: 0` / `outro.seconds: 0` turn those off.
-- `lowerThird`: spoken words that cue the name bar. Name and title come from the brand file.
+  Start `from` on the first word of the claim, not on lead-in words, and make the hook graphic show its main word within about
+  0.3 s so the opening is never a blank card.
+- `lowerThird`: spoken words that cue the name bar. Name and title come from the brand file. Use the SAME word for `startWord` and
+  `nameWord` (or adjacent words): the name enters at `nameWord`, so a later one leaves an empty navy bar on screen.
+- `crop4x5Y` (default 160): vertical offset of the 4:5 crop of the 1080x1920 base. The caption bar starts at y=1010 and the lower-third at
+  y=1190 (`layout.mjs`), so the mouth and chin must stay above about y=1000 in every frame (leaning forward, two-line captions). A typical
+  seated face needs more than the default (img-9354 used 320). Check on full-size stills, not contact-sheet thumbnails.
+- `source.clean`: point it at `assets/clean-graded.mp4` after `node scripts/grade-clean.mjs <project>` (gentle grade: subtle LUT, cooler
+  white balance, contrast 1.05, saturation 0.92). Always open `--preview` first.
 - `"captions": false`, `"lowerThird": false`, `"camera": false` switch off the core's brand captions, name bar and slow
   camera push for a style pack that brings its own (example: `style-library/03-kinetic-serif/kinetic.mjs`). Such an
   engine loads its own fonts from its pack; the brand fonts are still copied but unused. Record the brand override in VERIFY.md.
   The `free-form` skill's engine (`scripts/lib/freeform/freeform.mjs`) builds on the same switches.
 - `music`: `{ "file": "assets/track.mp3" }` for real music (record its source and licence in VERIFY.md); the synth pad is a placeholder.
+
+## After every render
+`node scripts/watch-render.mjs <render.mp4>` samples one frame per second into contact sheets (`review/watch/<name>/sheet-N.png`); open every
+sheet. `--faces --at t1,t2` gives full-size crops of the face/caption band (4:5 layout). Check the face is clear, no blank or half-built
+cards, no flashes, colour. Drafts render at `--quality draft` (about 2.3 Mbps, a third of the base) on purpose; the approved FINAL renders
+with `--quality high` and its bitrate is checked against the base. Any non-draft quality names the file `-final`.
 
 ## `<project>/beats.mjs` (the per-video part)
 Default export `(ctx) => ({ anchors, html, css, js, counters, cues })`, see the header of

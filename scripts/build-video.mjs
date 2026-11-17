@@ -2,7 +2,7 @@
 // Reusable video builder: cleaned cut + video.json + beats.mjs -> branded, gated render.
 //
 //   node scripts/build-video.mjs <project-dir> --format 4x5|9x16 [--sfx] [--music]
-//        [--stages base,compose,audio,review,render,check] [--quality draft|standard] [--tag v2] [--out name.mp4] [--skip-review]
+//        [--stages base,compose,audio,review,render,check] [--quality draft|standard|high] [--tag v2] [--out name.mp4] [--skip-review]
 //
 // --format is REQUIRED: ask the user which platform/format the video is for (never assume). See docs/BUILDER.md.
 //
@@ -34,7 +34,7 @@ import { checkReviewStamp, reviewStage } from "./lib/builder/review.mjs";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const args = argv.slice(2);
 if (!args.length || args.includes("--help")) {
-  console.log("Usage: node scripts/build-video.mjs <project-dir> --format 4x5|9x16 [--sfx] [--music] [--stages a,b] [--quality draft|standard] [--tag t] [--out file.mp4] [--skip-review]");
+  console.log("Usage: node scripts/build-video.mjs <project-dir> --format 4x5|9x16 [--sfx] [--music] [--stages a,b] [--quality draft|standard|high] [--tag t] [--out file.mp4] [--skip-review]");
   exit(args.length ? 0 : 1);
 }
 const o = { dir: null, format: null, sfx: false, music: false, stages: "base,compose,audio,compose,review", quality: "draft", tag: null, out: null, skipReview: false };

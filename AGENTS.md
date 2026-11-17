@@ -67,6 +67,9 @@ trusting a zero filler count. Tools: `luts/` (grade), `scripts/sound-design.mjs`
 Brand: if `brand/BRAND.md` exists, read it before choosing colours, fonts, captions, or lower-thirds
 (tokens in `brand/brand.json`, fonts in `brand/fonts`; Space Grotesk is NOT in the renderer's auto font list, so
 embed with @font-face). Every count-up number needs counter sound (`scripts/lib/counter-ticks.mjs`).
+Grade every video gently with `node scripts/grade-clean.mjs <project>` (open `--preview` first). Face first: no caption, panel, or lower-third
+may cover the speaker's mouth or chin (tune `crop4x5Y`). After EVERY render run `node scripts/watch-render.mjs <render>` and open every
+sheet before reporting; fix what you see. Drafts render at the default draft quality on purpose; the approved final renders `--quality high`.
 
 ## Stateless work and session end
 

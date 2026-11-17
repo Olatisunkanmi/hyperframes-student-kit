@@ -26,6 +26,8 @@
     "audio:check": "node scripts/audio-check.mjs",
     "audio:joins": "node scripts/audio-joins.mjs",
     "sound": "node scripts/sound-design.mjs",
+    "watch-render": "node scripts/watch-render.mjs",
+    "grade": "node scripts/grade-clean.mjs",
     "build-video": "node scripts/build-video.mjs",
     "new-project": "node scripts/new-project.mjs",
     "status": "node scripts/project-status.mjs",
